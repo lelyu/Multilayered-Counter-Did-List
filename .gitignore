@@ -1,28 +1,31 @@
 # Firebase build and deployment files
-/firebase-debug.log
-/firebase-debug.*.log
-.firebaserc
+mcdl-app/firebase-debug.log
+mcdl-app/firebase-debug.*.log
+mcdl-app/.firebaserc
 
 # Firebase Hosting
-/firebase.json
-*.cache
-hosting/.cache
+mcdl-app/firebase.json
+mcdl-app/*.cache
+mcdl-app/hosting/.cache
 
 # Firebase Functions
-/functions/node_modules/
-/functions/.env
-/functions/package-lock.json
+mcdl-app/functions/node_modules/
+mcdl-app/functions/.env
+mcdl-app/functions/package-lock.json
 
 # Firebase Emulators
-/firebase-*.zip
-/.firebase/
-/emulator-ui/
+mcdl-app/firebase-*.zip
+mcdl-app/.firebase/
+mcdl-app/emulator-ui/
 
 # Logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+mcdl-app/*.log
+mcdl-app/npm-debug.log*
+mcdl-app/yarn-debug.log*
+mcdl-app/yarn-error.log*
 
 # Environment files (local configs)
-/.env.*
+mcdl-app/.env.*
+mcdl-app/.env
+
+mcdl-app/src/firebase.ts
