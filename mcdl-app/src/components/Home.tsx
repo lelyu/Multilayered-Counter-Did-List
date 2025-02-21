@@ -11,9 +11,19 @@ const Home: React.FC = () => {
         currLists.push(`List ${i}`);
     }
 
-    const onCounterClick = () => {
-        setCount(prevCount => prevCount + 1); // Best practice: use previous state
+    const onCounterClick = (isPlus: boolean): void => {
+        if (isPlus) {
+            setCount(prevCount => prevCount + 1);
+        } else {
+            setCount(prevCount => prevCount - 1);
+        }
+
+
     };
+
+    const addToCurrentList = (): void => {
+
+    }
 
     return (
         <>
@@ -29,8 +39,16 @@ const Home: React.FC = () => {
                     </div>
                     <div className="col">
                         <h1>Home</h1>
-                        <button onClick={onCounterClick}>Click me</button>
-                        <p>Count: {count}</p>
+                        <button type="button" className="btn btn-light" onClick={addToCurrentList}>Add to current List
+                        </button>
+                        <div>
+                            <input></input>
+                            <button type="button" className="btn btn-light" onClick={() => onCounterClick(true)}>+
+                            </button>
+                            <button type="button" className="btn btn-light" onClick={() => onCounterClick(false)}>-
+                            </button>
+                            <p>Count: {count}</p>
+                        </div>
                     </div>
                     <div className="col">
                         <h1>List Column (current folder)</h1>
