@@ -4,11 +4,15 @@ const Home: React.FC = () => {
     const [count, setCount] = useState<number>(0); // Corrected type annotation
     const folders: string[] = [];
     const currLists: string[] = [];
+    const currListItems: string[] = [];
     for (let i = 0; i < 10; i++) {
         folders.push(`Folder ${i}`);
     }
     for (let i = 0; i < 10; i++) {
         currLists.push(`List ${i}`);
+    }
+    for (let i = 0; i < 10; i++) {
+        currListItems.push(`Item ${i}`);
     }
 
     const onCounterClick = (isPlus: boolean): void => {
@@ -39,10 +43,18 @@ const Home: React.FC = () => {
                     </div>
                     <div className="col">
                         <h1>Home</h1>
-                        <button type="button" className="btn btn-light" onClick={addToCurrentList}>Add to current List
-                        </button>
+                        <button type="button" className="btn btn-light" onClick={addToCurrentList}>Save</button>
+                        <div className="btn-group-vertical container" role="group" aria-label="Vertical button group">
+                            {currListItems.map(item => (
+                                <button type="button" className="btn btn-light text-start">{item}</button>
+                            ))}
+                        </div>
                         <div>
-                            <input></input>
+                            <div className="input-group mb-3">
+                                <span className="input-group-text" id="inputGroup-sizing-default">Type or Select</span>
+                                <input type="text" className="form-control" aria-label="Sizing example input"
+                                       aria-describedby="inputGroup-sizing-default"/>
+                            </div>
                             <button type="button" className="btn btn-light" onClick={() => onCounterClick(true)}>+
                             </button>
                             <button type="button" className="btn btn-light" onClick={() => onCounterClick(false)}>-

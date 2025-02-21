@@ -10,7 +10,7 @@ function Footer() {
                         <i className="bi bi-bootstrap" style={{fontSize: "24px"}}></i>
                     </a>
                     <span className="mb-3 mb-md-0 text-body-secondary">
-            © 2024 Company, Inc
+            © 2025 Designed by Le Lyu in Massachusetts.
           </span>
                 </div>
 

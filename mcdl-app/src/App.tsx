@@ -7,7 +7,7 @@ import './App.css';
 
 const App: React.FC = () => {
     return (
-        <div className="app-container">
+        <div className="app-container shadow p-3 mb-5 bg-body-tertiary rounded">
             <Router>
                 <Navbar/>
 

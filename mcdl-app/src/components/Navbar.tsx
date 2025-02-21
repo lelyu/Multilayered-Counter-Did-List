@@ -4,7 +4,7 @@ function Navbar() {
             <nav className="navbar navbar-expand-lg bg-body-tertiary">
                 <div className="container-fluid">
                     <a className="navbar-brand" href="#">
-                        Navbar
+                        Progress Tracker
                     </a>
                     <button
                         className="navbar-toggler"
@@ -21,12 +21,17 @@ function Navbar() {
                         <ul className="navbar-nav me-auto mb-2 mb-lg-0">
                             <li className="nav-item">
                                 <a className="nav-link active" aria-current="page" href="#">
-                                    Home
+                                    Login
                                 </a>
                             </li>
                             <li className="nav-item">
                                 <a className="nav-link" href="#">
-                                    Link
+                                    Logout
+                                </a>
+                            </li>
+                            <li className="nav-item">
+                                <a className="nav-link" href="#">
+                                    Register
                                 </a>
                             </li>
                             <li className="nav-item dropdown">
@@ -37,17 +42,17 @@ function Navbar() {
                                     data-bs-toggle="dropdown"
                                     aria-expanded="false"
                                 >
-                                    Dropdown
+                                    Other Apps
                                 </a>
                                 <ul className="dropdown-menu">
                                     <li>
                                         <a className="dropdown-item" href="#">
-                                            Action
+                                            Daily Mood Tracker
                                         </a>
                                     </li>
                                     <li>
                                         <a className="dropdown-item" href="#">
-                                            Another action
+                                            iPortfolio
                                         </a>
                                     </li>
                                     <li>
@@ -55,16 +60,12 @@ function Navbar() {
                                     </li>
                                     <li>
                                         <a className="dropdown-item" href="#">
-                                            Something else here
+                                            Personal Website
                                         </a>
                                     </li>
                                 </ul>
                             </li>
-                            <li className="nav-item">
-                                <a className="nav-link disabled" aria-disabled="true">
-                                    Disabled
-                                </a>
-                            </li>
+
                         </ul>
                         <form className="d-flex" role="search">
                             <input
