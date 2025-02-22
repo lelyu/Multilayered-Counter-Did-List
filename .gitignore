@@ -31,3 +31,5 @@ mcdl-app/.env
 mcdl-app/src/config/firebase.ts
 
 mcdl-app/package-lock.json
+
+.idea
