@@ -28,6 +28,6 @@ mcdl-app/yarn-error.log*
 mcdl-app/.env.*
 mcdl-app/.env
 
-mcdl-app/src/firebase.ts
+mcdl-app/src/config/firebase.ts
 
 mcdl-app/package-lock.json

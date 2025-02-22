@@ -1,10 +1,13 @@
-import React, {useState} from "react";
+import React, { useState } from "react";
 
 const Home: React.FC = () => {
     const [count, setCount] = useState<number>(0); // Corrected type annotation
+
+
     const folders: string[] = [];
     const currLists: string[] = [];
     const currListItems: string[] = [];
+
     for (let i = 0; i < 10; i++) {
         folders.push(`Folder ${i}`);
     }
@@ -17,17 +20,13 @@ const Home: React.FC = () => {
 
     const onCounterClick = (isPlus: boolean): void => {
         if (isPlus) {
-            setCount(prevCount => prevCount + 1);
+            setCount((prevCount) => prevCount + 1);
         } else {
-            setCount(prevCount => prevCount - 1);
+            setCount((prevCount) => prevCount - 1);
         }
-
-
     };
 
-    const addToCurrentList = (): void => {
-
-    }
+    const addToCurrentList = (): void => {};
 
     return (
         <>
@@ -35,29 +34,66 @@ const Home: React.FC = () => {
                 <div className="row align-items-start">
                     <div className="col">
                         <h1>Folder Column</h1>
-                        <div className="btn-group-vertical container" role="group" aria-label="Vertical button group">
-                            {folders.map(folder => (
-                                <button type="button" className="btn btn-light text-start">{folder}</button>
+                        <div
+                            className="btn-group-vertical container"
+                            role="group"
+                            aria-label="Vertical button group"
+                        >
+                            {folders.map((folder) => (
+                                <button type="button" className="btn btn-light text-start">
+                                    {folder}
+                                </button>
                             ))}
                         </div>
                     </div>
                     <div className="col">
                         <h1>Home</h1>
-                        <button type="button" className="btn btn-light" onClick={addToCurrentList}>Save</button>
-                        <div className="btn-group-vertical container" role="group" aria-label="Vertical button group">
-                            {currListItems.map(item => (
-                                <button type="button" className="btn btn-light text-start">{item}</button>
+                        <button
+                            type="button"
+                            className="btn btn-light"
+                            onClick={addToCurrentList}
+                        >
+                            Save
+                        </button>
+                        <div
+                            className="btn-group-vertical container"
+                            role="group"
+                            aria-label="Vertical button group"
+                        >
+                            {currListItems.map((item) => (
+                                <button type="button" className="btn btn-light text-start">
+                                    {item}
+                                </button>
                             ))}
                         </div>
                         <div>
                             <div className="input-group mb-3">
-                                <span className="input-group-text" id="inputGroup-sizing-default">Type or Select</span>
-                                <input type="text" className="form-control" aria-label="Sizing example input"
-                                       aria-describedby="inputGroup-sizing-default"/>
+                <span
+                    className="input-group-text"
+                    id="inputGroup-sizing-default"
+                >
+                  Type or Select
+                </span>
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    aria-label="Sizing example input"
+                                    aria-describedby="inputGroup-sizing-default"
+                                />
                             </div>
-                            <button type="button" className="btn btn-light" onClick={() => onCounterClick(true)}>+
+                            <button
+                                type="button"
+                                className="btn btn-light"
+                                onClick={() => onCounterClick(true)}
+                            >
+                                +
                             </button>
-                            <button type="button" className="btn btn-light" onClick={() => onCounterClick(false)}>-
+                            <button
+                                type="button"
+                                className="btn btn-light"
+                                onClick={() => onCounterClick(false)}
+                            >
+                                -
                             </button>
                             <p>Count: {count}</p>
                         </div>
@@ -65,19 +101,22 @@ const Home: React.FC = () => {
                     <div className="col">
                         <h1>List Column (current folder)</h1>
 
-                        <div className="btn-group-vertical container" role="group"
-                             aria-label="Vertical button group">
-                            {currLists.map(ls => (
-                                <button type="button" className="btn btn-light text-start">{ls}</button>
+                        <div
+                            className="btn-group-vertical container"
+                            role="group"
+                            aria-label="Vertical button group"
+                        >
+                            {currLists.map((ls) => (
+                                <button type="button" className="btn btn-light text-start">
+                                    {ls}
+                                </button>
                             ))}
                         </div>
-
                     </div>
                 </div>
             </div>
-
         </>
-    )
+    );
 };
 
 export default Home;
