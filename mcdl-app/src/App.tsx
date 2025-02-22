@@ -3,7 +3,8 @@ import {BrowserRouter as Router, Route, Routes} from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Home from "./components/Home"
-import Auth from "./components/Auth";
+import Register from "./components/Register.tsx";
+import Login from "./components/Login.tsx";
 import './App.css';
 
 const App: React.FC = () => {
@@ -14,9 +15,9 @@ const App: React.FC = () => {
 
                 <Routes>
                     <Route path="/" element={<Home/>}/>
-                    <Route path="/auth" element={<Auth/>}/>
+                    <Route path="/register" element={<Register/>}/>
+                    <Route path="/login" element={<Login/>}/>
                 </Routes>
-
 
                 <Footer/>
             </Router>
