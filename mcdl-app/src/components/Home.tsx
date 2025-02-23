@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, {useState, useEffect} from "react";
+import {auth, db} from "../config/firebase";
+import {addDoc, collection, serverTimestamp} from "firebase/firestore";
 
 const Home: React.FC = () => {
     const [count, setCount] = useState<number>(0); // Corrected type annotation
-
 
     const folders: string[] = [];
     const currLists: string[] = [];
@@ -18,6 +19,47 @@ const Home: React.FC = () => {
         currListItems.push(`Item ${i}`);
     }
 
+    const createFolder = async (userId: string, folderName: string) => {
+        try {
+            const folderRef = await addDoc(collection(db, 'folders'), {
+                name: folderName,
+                dateCreated: serverTimestamp()
+            });
+            console.log("folder was created", folderRef.id);
+            return folderRef.id
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+    const createList = async (folderId: string, listName: string) => {
+        try {
+            const listRef = await addDoc(collection(db, 'folders', folderId, 'lists'), {
+                name: listName,
+                dateCreated: serverTimestamp()
+            });
+            console.log("List created with ID:", listRef.id);
+            return listRef.id;  // Return list id for further nesting
+        } catch (error) {
+            console.error("Error creating list:", error);
+        }
+    }
+
+    const createItem = async (folderId: string, listId: string, itemName: string, count: number) => {
+        try {
+            const itemRef = await addDoc(collection(db, 'folders', folderId, 'lists', listId, 'items'), {
+                name: itemName,
+                dateCreated: serverTimestamp(),
+                count: count
+            });
+            console.log("Item created with ID:", itemRef.id);
+            return itemRef.id;
+        } catch (error) {
+            console.error("Error creating item:", error);
+        }
+    }
+
+
     const onCounterClick = (isPlus: boolean): void => {
         if (isPlus) {
             setCount((prevCount) => prevCount + 1);
@@ -26,7 +68,9 @@ const Home: React.FC = () => {
         }
     };
 
-    const addToCurrentList = (): void => {};
+    const addToCurrentList = (): void => {
+    };
+
 
     return (
         <>

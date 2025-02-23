@@ -1,12 +1,14 @@
-import {auth} from "../config/firebase";
+import {auth, db} from "../config/firebase";
 import {createUserWithEmailAndPassword} from "firebase/auth";
+import {addDoc, collection, serverTimestamp} from "firebase/firestore"
 import React, {useState} from "react";
 
 const Register: React.FC = () => {
     const [email, setEmail] = useState<string>("");
     const [password, setPassword] = useState<string>("");
     const [confirmedPassword, setConfirmedPassword] = useState<string>("");
-
+    const [firstName, setFirstName] = useState<string>("");
+    const [lastName, setLastName] = useState<string>("");
 
     const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setEmail(e.target.value);
@@ -17,29 +19,35 @@ const Register: React.FC = () => {
     };
 
 
-    const register = (event: React.MouseEvent<HTMLButtonElement>) => {
+    const register = async (event: React.MouseEvent<HTMLButtonElement>): Promise<void> => {
         event.preventDefault();
+
         if (password !== confirmedPassword) {
             alert("Passwords do not match");
             setConfirmedPassword("");
-            setPassword(
-                ""
-            )
+            setPassword("");
             return;
         }
-        createUserWithEmailAndPassword(auth, email, password)
-            .then((userCredential) => {
-                // Signed up
-                const user = userCredential.user;
-                // ...
-                window.location.href = '/';
-            })
-            .catch((error) => {
-                const errorCode = error.code;
-                const errorMessage = error.message;
-                // ..
-            });
 
+        try {
+            // Create the user with email and password
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+
+            // Create a user document in the "users" collection
+            const docRef = await addDoc(collection(db, "users"), {
+                userId: user.uid,
+                firstName: firstName,
+                lastName: lastName,
+                email: email,
+            });
+            console.log("Document written with ID:", docRef.id);
+
+            // Redirect after document creation is complete
+            window.location.href = '/';
+        } catch (error) {
+            console.error("Error during registration:", error);
+        }
     };
 
 
@@ -47,6 +55,18 @@ const Register: React.FC = () => {
         <>
             <h1>Register</h1>
             <form>
+                <div className="mb-3">
+                    <label htmlFor="firstName" className="form-label">First Name</label>
+                    <input value={firstName} onChange={(e) => setFirstName(e.target.value)} type="text"
+                           className="form-control"
+                           id="firstName"/>
+                </div>
+                <div className="mb-3">
+                    <label htmlFor="lastName" className="form-label">Last Name</label>
+                    <input value={lastName} onChange={(e) => setLastName(e.target.value)} type="text"
+                           className="form-control"
+                           id="lastName"/>
+                </div>
                 <div className="mb-3">
                     <label htmlFor="exampleInputEmail1" className="form-label">Email address</label>
                     <input value={email} onChange={handleEmailChange} type="email" className="form-control"
