@@ -1,4 +1,25 @@
-function Navbar() {
+import {getAuth, onAuthStateChanged} from "firebase/auth";
+import {useState, useEffect} from "react";
+
+const Navbar: React.FC = () => {
+    const [user, setUser] = useState(null);
+
+    useEffect(() => {
+        const auth = getAuth();
+        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+            if (currentUser) {
+                // User is signed in
+                setUser(currentUser);
+            } else {
+                // User is signed out
+                setUser(null);
+            }
+        });
+
+        // Cleanup subscription on unmount
+        return () => unsubscribe();
+    }, []);
+
     return (
         <>
             <nav className="navbar navbar-expand-lg bg-body-tertiary">
@@ -28,6 +49,13 @@ function Navbar() {
                                 <a className="nav-link" href="#">
                                     Logout
                                 </a>
+                            </li>
+                            <li className="nav-item">
+                                {user ? (
+                                    <a className="nav-link">Welcome, {user.email}</a>
+                                ) : (
+                                    <a className="nav-link">Please sign in.</a>
+                                )}
                             </li>
                             <li className="nav-item">
                                 <a className="nav-link" href="/register">
