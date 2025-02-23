@@ -5,6 +5,7 @@ import React, {useState} from "react";
 const Register: React.FC = () => {
     const [email, setEmail] = useState<string>("");
     const [password, setPassword] = useState<string>("");
+    const [confirmedPassword, setConfirmedPassword] = useState<string>("");
 
 
     const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -18,7 +19,14 @@ const Register: React.FC = () => {
 
     const register = (event: React.MouseEvent<HTMLButtonElement>) => {
         event.preventDefault();
-
+        if (password !== confirmedPassword) {
+            alert("Passwords do not match");
+            setConfirmedPassword("");
+            setPassword(
+                ""
+            )
+            return;
+        }
         createUserWithEmailAndPassword(auth, email, password)
             .then((userCredential) => {
                 // Signed up
@@ -41,13 +49,21 @@ const Register: React.FC = () => {
             <form>
                 <div className="mb-3">
                     <label htmlFor="exampleInputEmail1" className="form-label">Email address</label>
-                    <input onChange={handleEmailChange} type="email" className="form-control" id="exampleInputEmail1"
+                    <input value={email} onChange={handleEmailChange} type="email" className="form-control"
+                           id="exampleInputEmail1"
                            aria-describedby="emailHelp"/>
                     <div id="emailHelp" className="form-text">We'll never share your email with anyone else.</div>
                 </div>
                 <div className="mb-3">
                     <label htmlFor="exampleInputPassword1" className="form-label">Password</label>
-                    <input onChange={handlePasswordChange} type="password" className="form-control"
+                    <input value={password} onChange={handlePasswordChange} type="password" className="form-control"
+                           id="exampleInputPassword1"/>
+                </div>
+                <div className="mb-3">
+                    <label htmlFor="exampleInputPassword1" className="form-label">Confirm Password</label>
+                    <input value={confirmedPassword} onChange={(e) => setConfirmedPassword(e.target.value)}
+                           type="password"
+                           className="form-control"
                            id="exampleInputPassword1"/>
                 </div>
                 <div className="mb-3 form-check">

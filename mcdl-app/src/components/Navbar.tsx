@@ -3,24 +3,27 @@ import React, {useState, useEffect} from "react";
 
 const Navbar: React.FC = () => {
     const [user, setUser] = useState(null);
-
+    const [loading, setLoading] = useState(true); // loading state
     const auth = getAuth();
 
     useEffect(() => {
-        onAuthStateChanged(auth, (user) => {
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
             if (user) {
-                // User is signed in, see docs for a list of available properties
-                // https://firebase.google.com/docs/reference/js/auth.user
                 setUser(user);
-                console.log('user is here');
-                // ...
+                console.log('User is here');
             } else {
-                // User is signed out
-                // ...
-                console.log('user is not here');
+                console.log('User is not here');
             }
+            setLoading(false); // authentication check is complete
         });
-    }, [user]);
+
+        // Cleanup the listener on component unmount
+        return () => unsubscribe();
+    }, []); // run only once on mount
+
+    if (loading) {
+        return <div>Loading...</div>; // or return null/placeholder
+    }
 
     const logout = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
