@@ -1,5 +1,5 @@
 import {getAuth, onAuthStateChanged} from "firebase/auth";
-import {useState, useEffect} from "react";
+import React, {useState, useEffect} from "react";
 
 const Navbar: React.FC = () => {
     const [user, setUser] = useState(null);

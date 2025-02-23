@@ -42,6 +42,7 @@ const Login: React.FC = () => {
 
             // The signed-in user info.
             const user = result.user;
+            console.log('user is signedin', user);
             // IdP data available using getAdditionalUserInfo(result)
             // ...
         }).catch((error) => {
