@@ -3,49 +3,50 @@ import {
     signInWithEmailAndPassword,
     GoogleAuthProvider,
     signInWithRedirect,
-    getRedirectResult
+    getRedirectResult,
+    signInWithPopup
 } from "firebase/auth";
-import React, {useState} from "react";
+import React, {useState, useEffect} from "react";
 
 
 const Login: React.FC = () => {
     const [email, setEmail] = useState<string>("");
     const [password, setPassword] = useState<string>("");
     const provider = new GoogleAuthProvider();
-
-
     const auth = getAuth();
+
 
     const login = (event: React.MouseEvent<HTMLButtonElement>) => {
         event.preventDefault();
         signInWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
-            // Signed in
-            const user = userCredential.user;
-            console.log(user);
-            // ...
-        })
-        .catch((error) => {
-            const errorCode = error.code;
-            const errorMessage = error.message;
-            console.log(errorCode, errorMessage);
-        });
+            .then((userCredential) => {
+                // Signed in
+                const user = userCredential.user;
+                console.log(user);
+                window.location.href = '/';
+                // ...
+            })
+            .catch((error) => {
+                const errorCode = error.code;
+                const errorMessage = error.message;
+                console.log(errorCode, errorMessage);
+            });
     }
 
-    const loginWithGoogle = () => {
-        signInWithRedirect(auth, provider);
-        getRedirectResult(auth)
-        .then((result) => {
-            // This gives you a Google Access Token. You can use it to access Google APIs.
-            const credential = GoogleAuthProvider.credentialFromResult(result);
-            const token = credential.accessToken;
-
-            // The signed-in user info.
-            const user = result.user;
-            console.log('user is signedin', user);
-            // IdP data available using getAdditionalUserInfo(result)
-            // ...
-        }).catch((error) => {
+    const loginWithGoogle = (event: React.MouseEvent<HTMLButtonElement>) => {
+        event.preventDefault();
+        signInWithPopup(auth, provider)
+            .then((result) => {
+                // This gives you a Google Access Token. You can use it to access the Google API.
+                const credential = GoogleAuthProvider.credentialFromResult(result);
+                const token = credential.accessToken;
+                // The signed-in user info.
+                const user = result.user;
+                // IdP data available using getAdditionalUserInfo(result)
+                // ...
+                window.location.href = '/';
+                console.log(user);
+            }).catch((error) => {
             // Handle Errors here.
             const errorCode = error.code;
             const errorMessage = error.message;
@@ -55,7 +56,7 @@ const Login: React.FC = () => {
             const credential = GoogleAuthProvider.credentialFromError(error);
             // ...
         });
-    }
+    };
 
 
     return (

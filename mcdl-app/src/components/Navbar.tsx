@@ -1,24 +1,38 @@
-import {getAuth, onAuthStateChanged} from "firebase/auth";
+import {getAuth, onAuthStateChanged, signOut} from "firebase/auth";
 import React, {useState, useEffect} from "react";
 
 const Navbar: React.FC = () => {
     const [user, setUser] = useState(null);
 
+    const auth = getAuth();
+
     useEffect(() => {
-        const auth = getAuth();
-        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-            if (currentUser) {
-                // User is signed in
-                setUser(currentUser);
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // User is signed in, see docs for a list of available properties
+                // https://firebase.google.com/docs/reference/js/auth.user
+                setUser(user);
+                console.log('user is here');
+                // ...
             } else {
                 // User is signed out
-                setUser(null);
+                // ...
+                console.log('user is not here');
             }
         });
+    }, [user]);
 
-        // Cleanup subscription on unmount
-        return () => unsubscribe();
-    }, []);
+    const logout = (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.preventDefault();
+        signOut(auth).then(() => {
+            window.location.href = '/';
+            console.log('user is outta here');
+        }).catch((error) => {
+            // An error happened.
+            console.log(error);
+        });
+    }
+
 
     return (
         <>
@@ -40,28 +54,34 @@ const Navbar: React.FC = () => {
                     </button>
                     <div className="collapse navbar-collapse" id="navbarSupportedContent">
                         <ul className="navbar-nav me-auto mb-2 mb-lg-0">
-                            <li className="nav-item">
-                                <a className="nav-link active" aria-current="page" href="/login">
-                                    Login
-                                </a>
-                            </li>
-                            <li className="nav-item">
-                                <a className="nav-link" href="#">
-                                    Logout
-                                </a>
-                            </li>
-                            <li className="nav-item">
-                                {user ? (
-                                    <a className="nav-link">Welcome, {user.email}</a>
+                            {
+                                user ? (
+                                    <>
+                                        <li className="nav-item">
+                                            <button onClick={logout} className="nav-link">
+                                                Logout
+                                            </button>
+                                        </li>
+                                        <li className="nav-item">
+                                            <a className="nav-link">Welcome, {user.email}</a>
+                                        </li>
+                                    </>
                                 ) : (
-                                    <a className="nav-link">Please sign in.</a>
-                                )}
-                            </li>
-                            <li className="nav-item">
-                                <a className="nav-link" href="/register">
-                                    Register
-                                </a>
-                            </li>
+                                    <>
+                                        <li className="nav-item">
+                                            <a className="nav-link active" aria-current="page" href="/login">
+                                                Login
+                                            </a>
+                                        </li>
+                                        <li className="nav-item">
+                                            <a className="nav-link" href="/register">
+                                                Register
+                                            </a>
+                                        </li>
+                                    </>
+                                )
+                            }
+
                             <li className="nav-item dropdown">
                                 <a
                                     className="nav-link dropdown-toggle"

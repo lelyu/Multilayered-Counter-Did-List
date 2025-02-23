@@ -24,6 +24,7 @@ const Register: React.FC = () => {
             // Signed up
             const user = userCredential.user;
             // ...
+            window.location.href = '/login';
         })
         .catch((error) => {
             const errorCode = error.code;
