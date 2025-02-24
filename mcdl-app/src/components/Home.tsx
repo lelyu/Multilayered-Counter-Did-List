@@ -14,8 +14,91 @@ const Home: React.FC = () => {
     const [selectedFolder, setSelectedFolder] = useState<string>("");
     const [selectedList, setSelectedList] = useState<string>("");
 
+    const getFolders = async (userId: string) => {
+        const foldersRef = collection(db, "users", userId, "folders");
+        const foldersSnapshot = await getDocs(foldersRef);
+        const folders = foldersSnapshot.docs.map((doc) => doc.id);
+        setFolders(folders);
+    }
 
-    // fetch and set user ojbect
+    const getLists = async (userId: string, folderId: string) => {
+        if (!user) return;
+        const listsRef = collection(db, "users", userId, "folders", folderId, 'lists');
+        const listsSnapshot = await getDocs(listsRef);
+        const lists = listsSnapshot.docs.map((doc) => doc.id);
+        setCurrLists(lists);
+    }
+
+    const getListItems = async (userId: string, folderId: string, listId: string) => {
+        const itemsRef = collection(db, "users", userId, "folders", folderId, "lists", listId, 'items');
+        const itemsSnapshot = await getDocs(itemsRef);
+        const items = itemsSnapshot.docs.map((doc) => doc.id);
+        setCurrListItems(items);
+    }
+
+
+    const createFolder = async (userId: string, folderName: string) => {
+        try {
+
+            const folderRef = await addDoc(collection(db, 'users', userId, 'folders'), {
+                name: folderName,
+                dateCreated: serverTimestamp()
+            });
+            console.log("folder was created", folderRef.id);
+            return folderRef.id
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+    const createList = async (userId: string, folderId: string, listName: string) => {
+        try {
+            const listRef = await addDoc(collection(db, 'users', userId, 'folders', folderId, 'lists'), {
+                name: listName,
+                dateCreated: serverTimestamp()
+            });
+            console.log("List created with ID:", listRef.id);
+            return listRef.id;  // Return list id for further nesting
+        } catch (error) {
+            console.error("Error creating list:", error);
+        }
+    }
+
+    const createItem = async (userId: string, folderId: string, listId: string, itemName: string, count: number) => {
+        try {
+            const itemRef = await addDoc(collection(db, 'users', userId, 'folders', folderId, 'lists', listId, 'items'), {
+                name: itemName,
+                dateCreated: serverTimestamp(),
+                count: count
+            });
+            console.log("Item created with ID:", itemRef.id);
+            return itemRef.id;
+        } catch (error) {
+            console.error("Error creating item:", error);
+        }
+    }
+
+    const fetchAndSetIntialData = async () => {
+        if (!user) return;
+        try {
+            const foldersRef = collection(db, "users", user.uid, "folders");
+            const foldersSnapshot = await getDocs(foldersRef);
+            const folders = foldersSnapshot.docs.map((doc) => doc.id);
+            setFolders(folders);
+            const listsRef = collection(db, "users", user.uid, "folders", folders[0], 'lists');
+            const listsSnapshot = await getDocs(listsRef);
+            const lists = listsSnapshot.docs.map((doc) => doc.id);
+            setCurrLists(lists);
+            const itemsRef = collection(db, "users", user.uid, "folders", folders[0], "lists", lists[0], 'items');
+            const itemsSnapshot = await getDocs(itemsRef);
+            const items = itemsSnapshot.docs.map((doc) => doc.id);
+            setCurrListItems(items);
+        } catch (error) {
+            console.error("Error fetching initial data:", error);
+        }
+    }
+
+    // fetch and set user object
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             if (user) {
@@ -30,108 +113,34 @@ const Home: React.FC = () => {
         // Cleanup the listener on component unmount
         return () => unsubscribe();
     }, []); // run only once on mount
+
     // fetch folders created by current user
     useEffect(() => {
-        if (!user) return;
-        const getFolders = async (userId: string) => {
-            const foldersRef = collection(db, "users", userId, "folders");
-            const foldersSnapshot = await getDocs(foldersRef);
-            const folders = foldersSnapshot.docs.map((doc) => doc.id);
-            setFolders(folders);
-        }
-        getFolders(user.uid);
-    }, [])
-    // fetch and set list under current folder
-    const getLists = async (folderId: string) => {
-        if (!user) return;
-        const listsRef = collection(db, "folders", folderId);
-        const listsSnapshot = await getDocs(listsRef);
-        const lists = listsSnapshot.docs.map((doc) => doc.id);
-        setCurrLists(lists);
-    }
-
-    const getListItems = async (folderId: string, listId: string) => {
-        const itemsRef = collection(db, "folders", folderId, "lists", listId);
-        const itemsSnapshot = await getDocs(itemsRef);
-        const items = itemsSnapshot.docs.map((doc) => doc.id);
-        setCurrListItems(items);
-    }
-
-    // by default set selected folder and selected list to be the first one
-    useEffect(() => {
-        if (!user) return;
-        if (folders.length > 0) {
-            setSelectedFolder(folders[0]);
-            getLists(folders[0]);
-        }
-        if (currentLists.length > 0) {
-            setSelectedList(currentLists[0]);
-        }
-    }, []);
-
-    // fetch and set items under current list
-    useEffect(() => {
-        if (!user) return;
-        getListItems(selectedFolder, selectedList);
+        fetchAndSetIntialData()
     }, [])
 
-
-    const createFolder = async (userId: string, folderName: string) => {
-        try {
-            const folderRef = await addDoc(collection(db, 'folders'), {
-                name: folderName,
-                dateCreated: serverTimestamp()
-            });
-            console.log("folder was created", folderRef.id);
-            return folderRef.id
-        } catch (error) {
-            console.log(error);
-        }
-    };
-
-    const createList = async (folderId: string, listName: string) => {
-        try {
-            const listRef = await addDoc(collection(db, 'folders', folderId, 'lists'), {
-                name: listName,
-                dateCreated: serverTimestamp()
-            });
-            console.log("List created with ID:", listRef.id);
-            return listRef.id;  // Return list id for further nesting
-        } catch (error) {
-            console.error("Error creating list:", error);
-        }
-    }
-
-    const createItem = async (folderId: string, listId: string, itemName: string, count: number) => {
-        try {
-            const itemRef = await addDoc(collection(db, 'folders', folderId, 'lists', listId, 'items'), {
-                name: itemName,
-                dateCreated: serverTimestamp(),
-                count: count
-            });
-            console.log("Item created with ID:", itemRef.id);
-            return itemRef.id;
-        } catch (error) {
-            console.error("Error creating item:", error);
-        }
-    }
 
     const handleSaveToCurrentList = async (e) => {
+        e.preventDefault();
         if (!user) return;
-        if (selectedFolder === "") {
-            // create a new default folder
-            const folderId: string = await createFolder(user.uid, "Default Folder");
-            setSelectedFolder(folderId);
-        }
-        if (selectedList === "") {
-            const ListId: string = await createList(selectedFolder, "Default List");
-            setSelectedList(ListId);
+
+        // Determine the folder to use
+        let folderIdToUse = selectedFolder;
+        if (!folderIdToUse) {
+            folderIdToUse = await createFolder(user.uid, "Default Folder");
+            setSelectedFolder(folderIdToUse);
         }
 
-        e.preventDefault();
-        createItem(selectedFolder, selectedList, itemName, count);
+        // Determine the list to use
+        let listIdToUse = selectedList;
+        if (!listIdToUse) {
+            listIdToUse = await createList(user.uid, folderIdToUse, "Default List");
+            setSelectedList(listIdToUse);
+        }
+
+        await createItem(user.uid, folderIdToUse, listIdToUse, itemName, count);
         console.log("Item created");
-    }
+    };
 
 
     const onCounterClick = (isPlus: boolean): void => {
