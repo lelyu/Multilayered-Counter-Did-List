@@ -7,7 +7,8 @@ import {
     signInWithPopup
 } from "firebase/auth";
 import React, {useState, useEffect} from "react";
-
+import {addDoc, collection} from "firebase/firestore";
+import {db, auth} from "../config/firebase";
 
 const Login: React.FC = () => {
     const [email, setEmail] = useState<string>("");
@@ -19,43 +20,59 @@ const Login: React.FC = () => {
     const login = (event: React.MouseEvent<HTMLButtonElement>) => {
         event.preventDefault();
         signInWithEmailAndPassword(auth, email, password)
-            .then((userCredential) => {
-                // Signed in
-                const user = userCredential.user;
-                console.log(user);
-                window.location.href = '/';
-                // ...
-            })
-            .catch((error) => {
-                const errorCode = error.code;
-                const errorMessage = error.message;
-                console.log(errorCode, errorMessage);
-            });
-    }
-
-    const loginWithGoogle = (event: React.MouseEvent<HTMLButtonElement>) => {
-        event.preventDefault();
-        signInWithPopup(auth, provider)
-            .then((result) => {
-                // This gives you a Google Access Token. You can use it to access the Google API.
-                const credential = GoogleAuthProvider.credentialFromResult(result);
-                const token = credential.accessToken;
-                // The signed-in user info.
-                const user = result.user;
-                // IdP data available using getAdditionalUserInfo(result)
-                // ...
-                window.location.href = '/';
-                console.log(user);
-            }).catch((error) => {
-            // Handle Errors here.
+        .then((userCredential) => {
+            // Signed in
+            const user = userCredential.user;
+            console.log(user);
+            window.location.href = '/';
+            // ...
+        })
+        .catch((error) => {
             const errorCode = error.code;
             const errorMessage = error.message;
-            // The email of the user's account used.
-            const email = error.customData.email;
-            // The AuthCredential type that was used.
-            const credential = GoogleAuthProvider.credentialFromError(error);
-            // ...
+            console.log(errorCode, errorMessage);
         });
+    }
+
+    const loginWithGoogle = async (
+        event: React.MouseEvent<HTMLButtonElement>
+    ) => {
+        event.preventDefault();
+
+        try {
+            const result = await signInWithPopup(auth, provider);
+            // Get the Google Access Token and user info.
+            const credential = GoogleAuthProvider.credentialFromResult(result);
+            const token = credential?.accessToken;
+            const user = result.user;
+
+            // Optionally split the displayName if you need first and last names.
+            const [firstName = "", lastName = ""] = user.displayName
+                ? user.displayName.split(" ")
+                : [];
+
+            // Create a user document in the "users" collection.
+            const docRef = await addDoc(collection(db, "users"), {
+                userId: user.uid,
+                firstName,
+                lastName,
+                email: user.email,
+            });
+
+            console.log("Document written with ID:", docRef.id);
+            console.log(user);
+
+            // Redirect to home.
+            window.location.href = "/";
+        } catch (error: any) {
+            // Handle Errors here.
+            console.error("Error during sign in:", error);
+            const errorCode = error.code;
+            const errorMessage = error.message;
+            const email = error.customData?.email;
+            const credential = GoogleAuthProvider.credentialFromError(error);
+            // Optionally, display the error message to the user.
+        }
     };
 
 

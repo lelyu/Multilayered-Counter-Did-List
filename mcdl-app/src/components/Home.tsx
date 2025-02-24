@@ -1,23 +1,80 @@
 import React, {useState, useEffect} from "react";
 import {auth, db} from "../config/firebase";
-import {addDoc, collection, serverTimestamp} from "firebase/firestore";
+import {collection, getDocs, addDoc, serverTimestamp} from "firebase/firestore";
+import {onAuthStateChanged} from "firebase/auth";
 
 const Home: React.FC = () => {
+    const [itemName, setItemName] = useState<string>("");
     const [count, setCount] = useState<number>(0); // Corrected type annotation
+    const [folders, setFolders] = useState<string[]>([]);
+    const [currentLists, setCurrLists] = useState<string[]>([]);
+    const [currListItems, setCurrListItems] = useState<string[]>([]);
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [selectedFolder, setSelectedFolder] = useState<string>("");
+    const [selectedList, setSelectedList] = useState<string>("");
 
-    const folders: string[] = [];
-    const currLists: string[] = [];
-    const currListItems: string[] = [];
 
-    for (let i = 0; i < 10; i++) {
-        folders.push(`Folder ${i}`);
+    // fetch and set user ojbect
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            if (user) {
+                setUser(user);
+                console.log('User is here');
+            } else {
+                console.log('User is not here');
+            }
+            setLoading(false); // authentication check is complete
+        });
+
+        // Cleanup the listener on component unmount
+        return () => unsubscribe();
+    }, []); // run only once on mount
+    // fetch folders created by current user
+    useEffect(() => {
+        if (!user) return;
+        const getFolders = async (userId: string) => {
+            const foldersRef = collection(db, "users", userId, "folders");
+            const foldersSnapshot = await getDocs(foldersRef);
+            const folders = foldersSnapshot.docs.map((doc) => doc.id);
+            setFolders(folders);
+        }
+        getFolders(user.uid);
+    }, [])
+    // fetch and set list under current folder
+    const getLists = async (folderId: string) => {
+        if (!user) return;
+        const listsRef = collection(db, "folders", folderId);
+        const listsSnapshot = await getDocs(listsRef);
+        const lists = listsSnapshot.docs.map((doc) => doc.id);
+        setCurrLists(lists);
     }
-    for (let i = 0; i < 10; i++) {
-        currLists.push(`List ${i}`);
+
+    const getListItems = async (folderId: string, listId: string) => {
+        const itemsRef = collection(db, "folders", folderId, "lists", listId);
+        const itemsSnapshot = await getDocs(itemsRef);
+        const items = itemsSnapshot.docs.map((doc) => doc.id);
+        setCurrListItems(items);
     }
-    for (let i = 0; i < 10; i++) {
-        currListItems.push(`Item ${i}`);
-    }
+
+    // by default set selected folder and selected list to be the first one
+    useEffect(() => {
+        if (!user) return;
+        if (folders.length > 0) {
+            setSelectedFolder(folders[0]);
+            getLists(folders[0]);
+        }
+        if (currentLists.length > 0) {
+            setSelectedList(currentLists[0]);
+        }
+    }, []);
+
+    // fetch and set items under current list
+    useEffect(() => {
+        if (!user) return;
+        getListItems(selectedFolder, selectedList);
+    }, [])
+
 
     const createFolder = async (userId: string, folderName: string) => {
         try {
@@ -59,6 +116,23 @@ const Home: React.FC = () => {
         }
     }
 
+    const handleSaveToCurrentList = async (e) => {
+        if (!user) return;
+        if (selectedFolder === "") {
+            // create a new default folder
+            const folderId: string = await createFolder(user.uid, "Default Folder");
+            setSelectedFolder(folderId);
+        }
+        if (selectedList === "") {
+            const ListId: string = await createList(selectedFolder, "Default List");
+            setSelectedList(ListId);
+        }
+
+        e.preventDefault();
+        createItem(selectedFolder, selectedList, itemName, count);
+        console.log("Item created");
+    }
+
 
     const onCounterClick = (isPlus: boolean): void => {
         if (isPlus) {
@@ -66,9 +140,6 @@ const Home: React.FC = () => {
         } else {
             setCount((prevCount) => prevCount - 1);
         }
-    };
-
-    const addToCurrentList = (): void => {
     };
 
 
@@ -95,7 +166,7 @@ const Home: React.FC = () => {
                         <button
                             type="button"
                             className="btn btn-light"
-                            onClick={addToCurrentList}
+                            onClick={handleSaveToCurrentList}
                         >
                             Save
                         </button>
@@ -150,7 +221,7 @@ const Home: React.FC = () => {
                             role="group"
                             aria-label="Vertical button group"
                         >
-                            {currLists.map((ls) => (
+                            {currentLists.map((ls) => (
                                 <button type="button" className="btn btn-light text-start">
                                     {ls}
                                 </button>
