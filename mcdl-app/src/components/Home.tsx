@@ -144,6 +144,15 @@ const Home: React.FC = () => {
 		}
 	};
 
+	const handleFolderSelection = (e) => {
+		e.preventDefault();
+		if (!user) return;
+		const folderId = e.target.value;
+		console.log(typeof folderId);
+		setSelectedFolder(folderId);
+		console.log(selectedFolder);
+	};
+
 	const fetchAndSetInitialData = async () => {
 		try {
 			getFolders(user.uid);
@@ -248,9 +257,11 @@ const Home: React.FC = () => {
 						>
 							{folders.map((folder) => (
 								<button
+									value={folder.id}
+									onClick={handleFolderSelection}
 									key={folder.id}
 									type="button"
-									className="btn btn-light text-start"
+									className={`btn ${selectedFolder === folder.id ? "btn-primary" : "btn-light"} text-start `}
 								>
 									{folder.name}
 									---
@@ -264,6 +275,7 @@ const Home: React.FC = () => {
 					<div className="col">
 						<h1>Home</h1>
 						<button
+							disabled={true}
 							type="button"
 							className="btn btn-light"
 							onClick={handleSaveToCurrentList}
@@ -317,19 +329,51 @@ const Home: React.FC = () => {
 						</div>
 					</div>
 					<div className="col">
-						<h1>List Column (current folder)</h1>
-
+						<h1>List Column</h1>
+						<div className="input-group mb-3">
+							<span
+								className="input-group-text"
+								id="inputGroup-sizing-default"
+							>
+								Add a new list:
+							</span>
+							<input
+								value={currentFolder}
+								onChange={(e) =>
+									setCurrentFolder(e.target.value)
+								}
+								type="text"
+								className="form-control"
+								aria-label="Sizing example input"
+								aria-describedby="inputGroup-sizing-default"
+							/>
+						</div>
+						<button
+							disabled={true}
+							type="button"
+							className="btn btn-light"
+							onClick={() =>
+								createFolder(user.uid, currentFolder)
+							}
+						>
+							Create New Folder
+						</button>
 						<div
 							className="btn-group-vertical container"
 							role="group"
 							aria-label="Vertical button group"
 						>
-							{currentLists.map((ls) => (
+							{folders.map((folder) => (
 								<button
+									key={folder.id}
 									type="button"
 									className="btn btn-light text-start"
 								>
-									{ls}
+									{folder.name}
+									---
+									{folder.dateCreated.getDate()}/
+									{folder.dateCreated.getMonth() + 1}/
+									{folder.dateCreated.getFullYear()}
 								</button>
 							))}
 						</div>
