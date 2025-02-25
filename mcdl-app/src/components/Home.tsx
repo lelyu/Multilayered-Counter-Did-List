@@ -23,7 +23,9 @@ const Home: React.FC = () => {
 	const getFolders = async (userId: string) => {
 		const foldersRef = collection(db, "users", userId, "folders");
 		const foldersSnapshot = await getDocs(foldersRef);
-		const folders = foldersSnapshot.docs.map((doc) => doc.id);
+		const folders = foldersSnapshot.docs.map((doc) => {
+			return doc.data().name;
+		});
 		setFolders(folders);
 	};
 
@@ -130,37 +132,9 @@ const Home: React.FC = () => {
 		}
 	};
 
-	const fetchAndSetIntialData = async () => {
-		if (!user) return;
+	const fetchAndSetInitialData = async () => {
 		try {
-			const foldersRef = collection(db, "users", user.uid, "folders");
-			const foldersSnapshot = await getDocs(foldersRef);
-			const folders = foldersSnapshot.docs.map((doc) => doc.id);
-			setFolders(folders);
-			const listsRef = collection(
-				db,
-				"users",
-				user.uid,
-				"folders",
-				folders[0],
-				"lists",
-			);
-			const listsSnapshot = await getDocs(listsRef);
-			const lists = listsSnapshot.docs.map((doc) => doc.id);
-			setCurrLists(lists);
-			const itemsRef = collection(
-				db,
-				"users",
-				user.uid,
-				"folders",
-				folders[0],
-				"lists",
-				lists[0],
-				"items",
-			);
-			const itemsSnapshot = await getDocs(itemsRef);
-			const items = itemsSnapshot.docs.map((doc) => doc.id);
-			setCurrListItems(items);
+			getFolders(user.uid);
 		} catch (error) {
 			console.error("Error fetching initial data:", error);
 		}
@@ -182,10 +156,11 @@ const Home: React.FC = () => {
 		return () => unsubscribe();
 	}, []); // run only once on mount
 
-	// fetch folders created by current user
 	useEffect(() => {
-		fetchAndSetIntialData();
-	}, []);
+		if (user) {
+			fetchAndSetInitialData();
+		}
+	}, [user]); // run when user changes
 
 	const handleSaveToCurrentList = async (e) => {
 		e.preventDefault();
