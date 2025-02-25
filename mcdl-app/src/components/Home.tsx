@@ -9,9 +9,15 @@ import {
 import { onAuthStateChanged } from "firebase/auth";
 
 const Home: React.FC = () => {
+	interface Folder {
+		id: string;
+		name: string;
+		dateCreated: Date;
+	}
+
 	const [itemName, setItemName] = useState<string>("");
 	const [count, setCount] = useState<number>(0); // Corrected type annotation
-	const [folders, setFolders] = useState<string[]>([]);
+	const [folders, setFolders] = useState<Folder[]>([]);
 	const [currentLists, setCurrLists] = useState<string[]>([]);
 	const [currListItems, setCurrListItems] = useState<string[]>([]);
 	const [user, setUser] = useState(null);
@@ -24,7 +30,13 @@ const Home: React.FC = () => {
 		const foldersRef = collection(db, "users", userId, "folders");
 		const foldersSnapshot = await getDocs(foldersRef);
 		const folders = foldersSnapshot.docs.map((doc) => {
-			return doc.data().name;
+			console.log(doc.data().dateCreated.toDate());
+
+			return {
+				id: doc.id,
+				name: doc.data().name,
+				dateCreated: doc.data().dateCreated.toDate(),
+			};
 		});
 		setFolders(folders);
 	};
@@ -236,10 +248,15 @@ const Home: React.FC = () => {
 						>
 							{folders.map((folder) => (
 								<button
+									key={folder.id}
 									type="button"
 									className="btn btn-light text-start"
 								>
-									{folder}
+									{folder.name}
+									---
+									{folder.dateCreated.getDate()}/
+									{folder.dateCreated.getMonth() + 1}/
+									{folder.dateCreated.getFullYear()}
 								</button>
 							))}
 						</div>
