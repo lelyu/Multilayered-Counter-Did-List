@@ -8,26 +8,26 @@ import {
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 
+interface Folder {
+	id: string;
+	name: string;
+	dateCreated: Date;
+}
+
+interface List {
+	id: string;
+	name: string;
+	dateCreated: Date;
+}
+
+interface Item {
+	id: string;
+	name: string;
+	count: number;
+	dateCreated: Date;
+}
+
 const Home: React.FC = () => {
-	interface Folder {
-		id: string;
-		name: string;
-		dateCreated: Date;
-	}
-
-	interface List {
-		id: string;
-		name: string;
-		dateCreated: Date;
-	}
-
-	interface Item {
-		id: string;
-		name: string;
-		count: number;
-		dateCreated: Date;
-	}
-
 	// user
 	const [user, setUser] = useState(null);
 	const [loading, setLoading] = useState(true);
