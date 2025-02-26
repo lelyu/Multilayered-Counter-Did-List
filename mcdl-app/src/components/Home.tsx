@@ -15,23 +15,28 @@ const Home: React.FC = () => {
 		dateCreated: Date;
 	}
 
+	interface List {
+		id: string;
+		name: string;
+		dateCreated: Date;
+	}
+
 	const [itemName, setItemName] = useState<string>("");
 	const [count, setCount] = useState<number>(0); // Corrected type annotation
 	const [folders, setFolders] = useState<Folder[]>([]);
-	const [currentLists, setCurrLists] = useState<string[]>([]);
+	const [currentLists, setCurrLists] = useState<List[]>([]);
 	const [currListItems, setCurrListItems] = useState<string[]>([]);
 	const [user, setUser] = useState(null);
 	const [loading, setLoading] = useState(true);
-	const [selectedFolder, setSelectedFolder] = useState<string>("");
-	const [selectedList, setSelectedList] = useState<string>("");
-	const [currentFolder, setCurrentFolder] = useState<string>("");
+	const [selectedFolder, setSelectedFolder] = useState<string>(""); // used for setting initial data and button click
+	const [selectedList, setSelectedList] = useState<string>(""); // used for setting initial data and button click
+	const [currentFolder, setCurrentFolder] = useState<string>(""); // specifically used for new folder creation
+	const [currentList, setCurrentList] = useState<string>(""); // specifically used for new list creation
 
 	const getFolders = async (userId: string) => {
 		const foldersRef = collection(db, "users", userId, "folders");
 		const foldersSnapshot = await getDocs(foldersRef);
 		const folders = foldersSnapshot.docs.map((doc) => {
-			console.log(doc.data().dateCreated.toDate());
-
 			return {
 				id: doc.id,
 				name: doc.data().name,
@@ -39,10 +44,11 @@ const Home: React.FC = () => {
 			};
 		});
 		setFolders(folders);
+		setSelectedFolder(folders[0].id);
 	};
 
 	const getLists = async (userId: string, folderId: string) => {
-		if (!user) return;
+		if (!userId || !folderId) return;
 		const listsRef = collection(
 			db,
 			"users",
@@ -52,7 +58,13 @@ const Home: React.FC = () => {
 			"lists",
 		);
 		const listsSnapshot = await getDocs(listsRef);
-		const lists = listsSnapshot.docs.map((doc) => doc.id);
+		const lists = listsSnapshot.docs.map((doc) => {
+			return {
+				id: doc.id,
+				name: doc.data().name,
+				dateCreated: doc.data().dateCreated.toDate(),
+			};
+		});
 		setCurrLists(lists);
 	};
 
@@ -85,7 +97,6 @@ const Home: React.FC = () => {
 					dateCreated: serverTimestamp(),
 				},
 			);
-			console.log("folder was created", folderRef.id);
 			return folderRef.id;
 		} catch (error) {
 			console.log(error);
@@ -98,6 +109,10 @@ const Home: React.FC = () => {
 		listName: string,
 	) => {
 		try {
+			if (!userId || !folderId) {
+				console.error("Error creating list: missing user or folder ID");
+				return;
+			}
 			const listRef = await addDoc(
 				collection(db, "users", userId, "folders", folderId, "lists"),
 				{
@@ -105,7 +120,6 @@ const Home: React.FC = () => {
 					dateCreated: serverTimestamp(),
 				},
 			);
-			console.log("List created with ID:", listRef.id);
 			return listRef.id; // Return list id for further nesting
 		} catch (error) {
 			console.error("Error creating list:", error);
@@ -144,18 +158,16 @@ const Home: React.FC = () => {
 		}
 	};
 
-	const handleFolderSelection = (e) => {
+	const handleFolderSelection = async (e) => {
 		e.preventDefault();
 		if (!user) return;
 		const folderId = e.target.value;
-		console.log(typeof folderId);
 		setSelectedFolder(folderId);
-		console.log(selectedFolder);
 	};
 
 	const fetchAndSetInitialData = async () => {
 		try {
-			getFolders(user.uid);
+			await getFolders(user.uid);
 		} catch (error) {
 			console.error("Error fetching initial data:", error);
 		}
@@ -166,9 +178,7 @@ const Home: React.FC = () => {
 		const unsubscribe = onAuthStateChanged(auth, (user) => {
 			if (user) {
 				setUser(user);
-				console.log("User is here");
 			} else {
-				console.log("User is not here");
 			}
 			setLoading(false); // authentication check is complete
 		});
@@ -182,6 +192,12 @@ const Home: React.FC = () => {
 			fetchAndSetInitialData();
 		}
 	}, [user]); // run when user changes
+
+	useEffect(() => {
+		if (selectedFolder) {
+			getLists(user.uid, selectedFolder);
+		}
+	}, [selectedFolder]);
 
 	const handleSaveToCurrentList = async (e) => {
 		e.preventDefault();
@@ -231,7 +247,7 @@ const Home: React.FC = () => {
 								Add a new folder:
 							</span>
 							<input
-								value={currentFolder}
+								value={currentList}
 								onChange={(e) =>
 									setCurrentFolder(e.target.value)
 								}
@@ -338,10 +354,8 @@ const Home: React.FC = () => {
 								Add a new list:
 							</span>
 							<input
-								value={currentFolder}
-								onChange={(e) =>
-									setCurrentFolder(e.target.value)
-								}
+								value={currentList}
+								onChange={(e) => setCurrentList(e.target.value)}
 								type="text"
 								className="form-control"
 								aria-label="Sizing example input"
@@ -349,31 +363,35 @@ const Home: React.FC = () => {
 							/>
 						</div>
 						<button
-							disabled={true}
+							disabled={false}
 							type="button"
 							className="btn btn-light"
 							onClick={() =>
-								createFolder(user.uid, currentFolder)
+								createList(
+									user.uid,
+									selectedFolder,
+									currentList,
+								)
 							}
 						>
-							Create New Folder
+							Create New List
 						</button>
 						<div
 							className="btn-group-vertical container"
 							role="group"
 							aria-label="Vertical button group"
 						>
-							{folders.map((folder) => (
+							{currentLists.map((list) => (
 								<button
-									key={folder.id}
+									key={list.id}
 									type="button"
 									className="btn btn-light text-start"
 								>
-									{folder.name}
+									{list.name}
 									---
-									{folder.dateCreated.getDate()}/
-									{folder.dateCreated.getMonth() + 1}/
-									{folder.dateCreated.getFullYear()}
+									{list.dateCreated.getDate()}/
+									{list.dateCreated.getMonth() + 1}/
+									{list.dateCreated.getFullYear()}
 								</button>
 							))}
 						</div>
