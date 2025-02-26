@@ -21,18 +21,33 @@ const Home: React.FC = () => {
 		dateCreated: Date;
 	}
 
-	const [itemName, setItemName] = useState<string>("");
-	const [count, setCount] = useState<number>(0); // Corrected type annotation
-	const [folders, setFolders] = useState<Folder[]>([]);
-	const [currentLists, setCurrLists] = useState<List[]>([]);
-	const [currListItems, setCurrListItems] = useState<string[]>([]);
+	interface Item {
+		id: string;
+		name: string;
+		count: number;
+		dateCreated: Date;
+	}
+
+	// user
 	const [user, setUser] = useState(null);
 	const [loading, setLoading] = useState(true);
-	const [selectedFolder, setSelectedFolder] = useState<string>(""); // used for setting initial data and button click
+
+	// item related attributes
+	const [itemName, setItemName] = useState<string>(""); // used for creating a new item; bound with input
+	const [count, setCount] = useState<number>(0); // bound with current item
+	const [currListItems, setCurrListItems] = useState<Item[]>([]); // list of items under currently selected list
+
+	// list related attributes
 	const [selectedList, setSelectedList] = useState<string>(""); // used for setting initial data and button click
-	const [currentFolder, setCurrentFolder] = useState<string>(""); // specifically used for new folder creation
+	const [currentLists, setCurrLists] = useState<List[]>([]); // current lists returned by firestore
 	const [currentList, setCurrentList] = useState<string>(""); // specifically used for new list creation
 
+	// folder related attributes
+	const [folders, setFolders] = useState<Folder[]>([]); // current folders returned by firestore
+	const [selectedFolder, setSelectedFolder] = useState<string>(""); // used for setting initial data and button click
+	const [currentFolder, setCurrentFolder] = useState<string>(""); // specifically used for new folder creation
+
+	// folder related functions
 	const getFolders = async (userId: string) => {
 		const foldersRef = collection(db, "users", userId, "folders");
 		const foldersSnapshot = await getDocs(foldersRef);
@@ -47,6 +62,29 @@ const Home: React.FC = () => {
 		setSelectedFolder(folders[0].id);
 	};
 
+	const createFolder = async (userId: string, folderName: string) => {
+		try {
+			const folderRef = await addDoc(
+				collection(db, "users", userId, "folders"),
+				{
+					name: folderName,
+					dateCreated: serverTimestamp(),
+				},
+			);
+			return folderRef.id;
+		} catch (error) {
+			console.log(error);
+		}
+	};
+
+	const handleFolderSelection = async (e) => {
+		e.preventDefault();
+		if (!user) return;
+		const folderId = e.target.value;
+		setSelectedFolder(folderId);
+	};
+
+	// list related functions
 	const getLists = async (userId: string, folderId: string) => {
 		if (!userId || !folderId) return;
 		try {
@@ -80,41 +118,6 @@ const Home: React.FC = () => {
 		}
 	};
 
-	const getListItems = async (
-		userId: string,
-		folderId: string,
-		listId: string,
-	) => {
-		const itemsRef = collection(
-			db,
-			"users",
-			userId,
-			"folders",
-			folderId,
-			"lists",
-			listId,
-			"items",
-		);
-		const itemsSnapshot = await getDocs(itemsRef);
-		const items = itemsSnapshot.docs.map((doc) => doc.id);
-		setCurrListItems(items);
-	};
-
-	const createFolder = async (userId: string, folderName: string) => {
-		try {
-			const folderRef = await addDoc(
-				collection(db, "users", userId, "folders"),
-				{
-					name: folderName,
-					dateCreated: serverTimestamp(),
-				},
-			);
-			return folderRef.id;
-		} catch (error) {
-			console.log(error);
-		}
-	};
-
 	const createList = async (
 		userId: string,
 		folderId: string,
@@ -138,6 +141,42 @@ const Home: React.FC = () => {
 		}
 	};
 
+	const handleListSelection = async (e) => {
+		e.preventDefault();
+		if (!user) return;
+		const listId = e.target.value;
+		setSelectedList(listId);
+	};
+
+	// item related functions
+	const getListItems = async (
+		userId: string,
+		folderId: string,
+		listId: string,
+	) => {
+		if (!userId || !folderId || !listId) return;
+		const itemsRef = collection(
+			db,
+			"users",
+			userId,
+			"folders",
+			folderId,
+			"lists",
+			listId,
+			"items",
+		);
+		const itemsSnapshot = await getDocs(itemsRef);
+		const items = itemsSnapshot.docs.map((doc) => {
+			return {
+				id: doc.id,
+				name: doc.data().name,
+				count: doc.data().count,
+				dateCreated: doc.data().dateCreated.toDate(),
+			};
+		});
+		setCurrListItems(items);
+	};
+
 	const createItem = async (
 		userId: string,
 		folderId: string,
@@ -145,6 +184,12 @@ const Home: React.FC = () => {
 		itemName: string,
 		count: number,
 	) => {
+		console.log("Creating item...");
+		console.log(userId, folderId, listId, itemName, count);
+		if (!userId || !folderId || !listId) {
+			console.error("Error creating item: missing user or folder ID");
+			return;
+		}
 		try {
 			const itemRef = await addDoc(
 				collection(
@@ -170,25 +215,20 @@ const Home: React.FC = () => {
 		}
 	};
 
-	const handleFolderSelection = async (e) => {
-		e.preventDefault();
-		if (!user) return;
-		const folderId = e.target.value;
-		setSelectedFolder(folderId);
-	};
-
-	const handleListSelection = async (e) => {
-		e.preventDefault();
-		if (!user) return;
-		const listId = e.target.value;
-		setSelectedList(listId);
-	};
-
+	// data related functions
 	const fetchAndSetInitialData = async () => {
 		try {
 			await getFolders(user.uid);
 		} catch (error) {
 			console.error("Error fetching initial data:", error);
+		}
+	};
+
+	const onCounterClick = (isPlus: boolean): void => {
+		if (isPlus) {
+			setCount((prevCount) => prevCount + 1);
+		} else {
+			setCount((prevCount) => prevCount - 1);
 		}
 	};
 
@@ -198,6 +238,7 @@ const Home: React.FC = () => {
 			if (user) {
 				setUser(user);
 			} else {
+				setUser(null);
 			}
 			setLoading(false); // authentication check is complete
 		});
@@ -220,46 +261,12 @@ const Home: React.FC = () => {
 		}
 	}, [selectedFolder]);
 
-	const handleSaveToCurrentList = async (e) => {
-		e.preventDefault();
-		if (!user) return;
-
-		// Determine the folder to use
-		let folderIdToUse = selectedFolder;
-		if (!folderIdToUse) {
-			folderIdToUse = await createFolder(user.uid, "Default Folder");
-			setSelectedFolder(folderIdToUse);
-		}
-
-		// Determine the list to use
-		let listIdToUse = selectedList;
-		if (!listIdToUse) {
-			listIdToUse = await createList(
-				user.uid,
-				folderIdToUse,
-				"Default List",
-			);
-			setSelectedList(listIdToUse);
-		}
-
-		await createItem(user.uid, folderIdToUse, listIdToUse, itemName, count);
-		console.log("Item created");
-	};
-
-	const onCounterClick = (isPlus: boolean): void => {
-		if (isPlus) {
-			setCount((prevCount) => prevCount + 1);
-		} else {
-			setCount((prevCount) => prevCount - 1);
-		}
-	};
-
 	return (
 		<>
 			<div className="container text-center">
 				<div className="row align-items-start">
 					<div className="col">
-						<h1>Folder Column</h1>
+						<h1>My Folders</h1>
 						<div className="input-group mb-3">
 							<span
 								className="input-group-text"
@@ -310,43 +317,53 @@ const Home: React.FC = () => {
 						</div>
 					</div>
 					<div className="col">
-						<h1>Home</h1>
-						<button
-							disabled={true}
-							type="button"
-							className="btn btn-light"
-							onClick={handleSaveToCurrentList}
-						>
-							Save
-						</button>
-						<div
-							className="btn-group-vertical container"
-							role="group"
-							aria-label="Vertical button group"
-						>
-							{currListItems.map((item) => (
-								<button
-									type="button"
-									className="btn btn-light text-start"
-								>
-									{item}
-								</button>
-							))}
-						</div>
+						<h1>My Items</h1>
 						<div>
 							<div className="input-group mb-3">
 								<span
 									className="input-group-text"
 									id="inputGroup-sizing-default"
 								>
-									Type or Select
+									Add a new item
 								</span>
 								<input
 									type="text"
 									className="form-control"
 									aria-label="Sizing example input"
 									aria-describedby="inputGroup-sizing-default"
+									value={itemName}
+									onChange={(e) =>
+										setItemName(e.target.value)
+									}
 								/>
+							</div>
+							<button
+								onClick={() =>
+									createItem(
+										user.uid,
+										selectedFolder,
+										selectedList,
+										itemName,
+										count,
+									)
+								}
+								className="btn btn-light"
+							>
+								Create new item
+							</button>
+							<div
+								className="btn-group-vertical container"
+								role="group"
+								aria-label="Vertical button group"
+							>
+								{currListItems.map((item) => (
+									<button
+										type="button"
+										className="btn btn-light text-start"
+									>
+										{item.name}
+									</button>
+								))}
 							</div>
 							<button
 								type="button"
@@ -366,7 +383,7 @@ const Home: React.FC = () => {
 						</div>
 					</div>
 					<div className="col">
-						<h1>List Column</h1>
+						<h1>My Lists</h1>
 						<div className="input-group mb-3">
 							<span
 								className="input-group-text"
