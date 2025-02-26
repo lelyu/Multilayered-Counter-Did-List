@@ -49,23 +49,35 @@ const Home: React.FC = () => {
 
 	const getLists = async (userId: string, folderId: string) => {
 		if (!userId || !folderId) return;
-		const listsRef = collection(
-			db,
-			"users",
-			userId,
-			"folders",
-			folderId,
-			"lists",
-		);
-		const listsSnapshot = await getDocs(listsRef);
-		const lists = listsSnapshot.docs.map((doc) => {
-			return {
-				id: doc.id,
-				name: doc.data().name,
-				dateCreated: doc.data().dateCreated.toDate(),
-			};
-		});
-		setCurrLists(lists);
+		try {
+			const listsRef = collection(
+				db,
+				"users",
+				userId,
+				"folders",
+				folderId,
+				"lists",
+			);
+			const listsSnapshot = await getDocs(listsRef);
+			if (listsSnapshot.docs.length > 0) {
+				const lists = listsSnapshot.docs.map((doc) => {
+					return {
+						id: doc.id,
+						name: doc.data().name,
+						dateCreated: doc.data().dateCreated.toDate(),
+					};
+				});
+				setCurrLists(lists);
+				setSelectedList(lists[0].id);
+			} else {
+				setCurrLists([]);
+				setSelectedList("");
+			}
+		} catch (error) {
+			console.error("No available lists", error);
+			setCurrLists([]);
+			setSelectedList("");
+		}
 	};
 
 	const getListItems = async (
@@ -165,6 +177,13 @@ const Home: React.FC = () => {
 		setSelectedFolder(folderId);
 	};
 
+	const handleListSelection = async (e) => {
+		e.preventDefault();
+		if (!user) return;
+		const listId = e.target.value;
+		setSelectedList(listId);
+	};
+
 	const fetchAndSetInitialData = async () => {
 		try {
 			await getFolders(user.uid);
@@ -187,12 +206,14 @@ const Home: React.FC = () => {
 		return () => unsubscribe();
 	}, []); // run only once on mount
 
+	// whenever user changes get new folders
 	useEffect(() => {
 		if (user) {
 			fetchAndSetInitialData();
 		}
 	}, [user]); // run when user changes
 
+	// whenever selected folder changes get new lists
 	useEffect(() => {
 		if (selectedFolder) {
 			getLists(user.uid, selectedFolder);
@@ -247,7 +268,7 @@ const Home: React.FC = () => {
 								Add a new folder:
 							</span>
 							<input
-								value={currentList}
+								value={currentFolder}
 								onChange={(e) =>
 									setCurrentFolder(e.target.value)
 								}
@@ -376,24 +397,33 @@ const Home: React.FC = () => {
 						>
 							Create New List
 						</button>
+
 						<div
 							className="btn-group-vertical container"
 							role="group"
 							aria-label="Vertical button group"
 						>
-							{currentLists.map((list) => (
-								<button
-									key={list.id}
-									type="button"
-									className="btn btn-light text-start"
-								>
-									{list.name}
-									---
-									{list.dateCreated.getDate()}/
-									{list.dateCreated.getMonth() + 1}/
-									{list.dateCreated.getFullYear()}
+							{currentLists.length > 0 ? (
+								currentLists.map((list) => (
+									<button
+										onClick={handleListSelection}
+										value={list.id}
+										key={list.id}
+										type="button"
+										className={`btn ${selectedList === list.id ? "btn-primary" : "btn-light"} text-start`}
+									>
+										{list.name}
+										---
+										{list.dateCreated.getDate()}/
+										{list.dateCreated.getMonth() + 1}/
+										{list.dateCreated.getFullYear()}
+									</button>
+								))
+							) : (
+								<button className="btn btn-light text-start">
+									You haven't created any lists yet.
 								</button>
-							))}
+							)}
 						</div>
 					</div>
 				</div>
