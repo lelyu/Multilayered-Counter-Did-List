@@ -166,6 +166,10 @@ const Home: React.FC = () => {
 			"items",
 		);
 		const itemsSnapshot = await getDocs(itemsRef);
+		if (itemsSnapshot.docs.length === 0) {
+			setCurrListItems([]);
+			return;
+		}
 		const items = itemsSnapshot.docs.map((doc) => {
 			return {
 				id: doc.id,
@@ -260,6 +264,13 @@ const Home: React.FC = () => {
 			getLists(user.uid, selectedFolder);
 		}
 	}, [selectedFolder]);
+
+	// whenever selected list changes get new items
+	useEffect(() => {
+		if (selectedList) {
+			getListItems(user.uid, selectedFolder, selectedList);
+		}
+	}, [selectedList]);
 
 	return (
 		<>
@@ -356,8 +367,17 @@ const Home: React.FC = () => {
 								role="group"
 								aria-label="Vertical button group"
 							>
+								{currListItems.length === 0 && (
+									<button
+										className="btn btn-light text-start"
+										disabled
+									>
+										You haven't created any items yet.
+									</button>
+								)}
 								{currListItems.map((item) => (
 									<button
+										key={item.id}
 										type="button"
 										className="btn btn-light text-start"
 									>
@@ -437,7 +457,10 @@ const Home: React.FC = () => {
 									</button>
 								))
 							) : (
-								<button className="btn btn-light text-start">
+								<button
+									className="btn btn-light text-start"
+									disabled
+								>
 									You haven't created any lists yet.
 								</button>
 							)}
