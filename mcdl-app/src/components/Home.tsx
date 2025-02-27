@@ -5,6 +5,9 @@ import {
 	getDocs,
 	addDoc,
 	serverTimestamp,
+	updateDoc,
+	deleteDoc,
+	doc,
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 
@@ -36,6 +39,7 @@ const Home: React.FC = () => {
 	const [itemName, setItemName] = useState<string>(""); // used for creating a new item; bound with input
 	const [count, setCount] = useState<number>(0); // bound with current item
 	const [currListItems, setCurrListItems] = useState<Item[]>([]); // list of items under currently selected list
+	const [selectedListItem, setSelectedListItem] = useState<string>(""); // used for setting initial data and button click
 
 	// list related attributes
 	const [selectedList, setSelectedList] = useState<string>(""); // used for setting initial data and button click
@@ -64,7 +68,6 @@ const Home: React.FC = () => {
 	};
 
 	const createFolder = async (userId: string, folderName: string) => {
-		console.log(userId);
 		if (userId === null) {
 			alert("You are not logged in");
 			window.location.href = "/login";
@@ -85,7 +88,20 @@ const Home: React.FC = () => {
 			setCurrentFolder("");
 			return folderRef.id;
 		} catch (error) {
-			console.log(error);
+			console.error(error);
+		}
+	};
+
+	// note: only deleting current fields
+	const deleteFolder = async (userId: string, folderId: string) => {
+		if (!userId || !folderId) return;
+		try {
+			const folderRef = doc(db, "users", userId, "folders", folderId);
+			await deleteDoc(folderRef);
+		} catch (error) {
+			console.error("Error deleting folder:", error);
+		} finally {
+			getFolders(userId);
 		}
 	};
 
@@ -164,6 +180,30 @@ const Home: React.FC = () => {
 		}
 	};
 
+	const deleteList = async (
+		userId: string,
+		folderId: string,
+		listId: string,
+	) => {
+		if (!userId || !folderId || !listId) return;
+		try {
+			const listRef = doc(
+				db,
+				"users",
+				userId,
+				"folders",
+				folderId,
+				"lists",
+				listId,
+			);
+			await deleteDoc(listRef);
+		} catch (error) {
+			console.error("Error deleting folder:", error);
+		} finally {
+			getLists(userId, selectedFolder);
+		}
+	};
+
 	const handleListSelection = async (e) => {
 		e.preventDefault();
 		if (!user) return;
@@ -177,7 +217,13 @@ const Home: React.FC = () => {
 		folderId: string,
 		listId: string,
 	) => {
-		if (!userId || !folderId || !listId) return;
+		if (!userId || !folderId) {
+			return;
+		}
+		if (!listId) {
+			setCurrListItems([]);
+			return;
+		}
 		const itemsRef = collection(
 			db,
 			"users",
@@ -202,6 +248,7 @@ const Home: React.FC = () => {
 			};
 		});
 		setCurrListItems(items);
+		setSelectedListItem(items[0].id);
 	};
 
 	const createItem = async (
@@ -241,13 +288,46 @@ const Home: React.FC = () => {
 					count: count,
 				},
 			);
-			console.log("Item created with ID:", itemRef.id);
 			getListItems(userId, folderId, listId);
 			setItemName("");
 			return itemRef.id;
 		} catch (error) {
 			console.error("Error creating item:", error);
 		}
+	};
+
+	const deleteListItem = async (
+		userId: string,
+		folderId: string,
+		listId: string,
+		itemId: string,
+	) => {
+		if (!userId || !folderId || !listId || !itemId) return;
+		try {
+			const listItemRef = doc(
+				db,
+				"users",
+				userId,
+				"folders",
+				folderId,
+				"lists",
+				listId,
+				"items",
+				itemId,
+			);
+			await deleteDoc(listItemRef);
+		} catch (error) {
+			console.error("Error deleting folder:", error);
+		} finally {
+			getListItems(userId, selectedFolder, selectedList);
+		}
+	};
+
+	const handleListItemSelection = async (e) => {
+		e.preventDefault();
+		if (!user) return;
+		const itemId = e.target.value;
+		setSelectedListItem(itemId);
 	};
 
 	// data related functions
@@ -291,14 +371,16 @@ const Home: React.FC = () => {
 
 	// whenever selected folder changes get new lists
 	useEffect(() => {
-		if (selectedFolder) {
-			getLists(user.uid, selectedFolder);
+		if (user !== null) {
+			getLists(user.uid, selectedFolder).then(() => {
+				return;
+			});
 		}
 	}, [selectedFolder]);
 
 	// whenever selected list changes get new items
 	useEffect(() => {
-		if (selectedList) {
+		if (user !== null) {
 			getListItems(user.uid, selectedFolder, selectedList);
 		}
 	}, [selectedList]);
@@ -339,6 +421,16 @@ const Home: React.FC = () => {
 							}
 						>
 							Create New Folder
+						</button>
+						<button
+							disabled={false}
+							onClick={() =>
+								deleteFolder(user.uid, selectedFolder)
+							}
+							type="button"
+							className="btn btn-danger"
+						>
+							Delete Selected Folder
 						</button>
 						<div
 							className="btn-group-vertical container"
@@ -403,6 +495,21 @@ const Home: React.FC = () => {
 							>
 								Create new item
 							</button>
+							<button
+								disabled={false}
+								onClick={() =>
+									deleteListItem(
+										user.uid,
+										selectedFolder,
+										selectedList,
+										selectedListItem,
+									)
+								}
+								type="button"
+								className="btn btn-danger"
+							>
+								Delete Selected Item
+							</button>
 							<div
 								className="btn-group-vertical container"
 								role="group"
@@ -418,9 +525,11 @@ const Home: React.FC = () => {
 								)}
 								{currListItems.map((item) => (
 									<button
+										onClick={handleListItemSelection}
 										key={item.id}
+										value={item.id}
 										type="button"
-										className="btn btn-light text-start"
+										className={`btn ${selectedListItem === item.id ? "btn-primary" : "btn-light"} text-start`}
 									>
 										{item.name}
 									</button>
@@ -474,6 +583,21 @@ const Home: React.FC = () => {
 							}
 						>
 							Create New List
+						</button>
+
+						<button
+							disabled={false}
+							onClick={() =>
+								deleteList(
+									user.uid,
+									selectedFolder,
+									selectedList,
+								)
+							}
+							type="button"
+							className="btn btn-danger"
+						>
+							Delete Selected List
 						</button>
 
 						<div
