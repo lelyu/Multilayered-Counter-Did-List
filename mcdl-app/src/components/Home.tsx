@@ -49,6 +49,7 @@ const Home: React.FC = () => {
 
 	// folder related functions
 	const getFolders = async (userId: string) => {
+		if (!userId) return;
 		const foldersRef = collection(db, "users", userId, "folders");
 		const foldersSnapshot = await getDocs(foldersRef);
 		const folders = foldersSnapshot.docs.map((doc) => {
@@ -63,6 +64,15 @@ const Home: React.FC = () => {
 	};
 
 	const createFolder = async (userId: string, folderName: string) => {
+		console.log(userId);
+		if (userId === null) {
+			alert("You are not logged in");
+			window.location.href = "/login";
+		}
+		if (folderName.length === 0) {
+			console.error("Error creating folder: missing folder name");
+			return;
+		}
 		try {
 			const folderRef = await addDoc(
 				collection(db, "users", userId, "folders"),
@@ -71,6 +81,8 @@ const Home: React.FC = () => {
 					dateCreated: serverTimestamp(),
 				},
 			);
+			getFolders(userId);
+			setCurrentFolder("");
 			return folderRef.id;
 		} catch (error) {
 			console.log(error);
@@ -123,11 +135,20 @@ const Home: React.FC = () => {
 		folderId: string,
 		listName: string,
 	) => {
+		if (!userId) {
+			alert("You are not logged in");
+			window.location.href = "/login";
+		}
+		if (!folderId) {
+			console.error("Error creating list: folder ID");
+			return;
+		}
+		if (listName.length === 0) {
+			console.error("Error creating list: missing list name");
+			return;
+		}
+
 		try {
-			if (!userId || !folderId) {
-				console.error("Error creating list: missing user or folder ID");
-				return;
-			}
 			const listRef = await addDoc(
 				collection(db, "users", userId, "folders", folderId, "lists"),
 				{
@@ -135,6 +156,8 @@ const Home: React.FC = () => {
 					dateCreated: serverTimestamp(),
 				},
 			);
+			getLists(userId, folderId);
+			setCurrentList("");
 			return listRef.id; // Return list id for further nesting
 		} catch (error) {
 			console.error("Error creating list:", error);
@@ -188,10 +211,16 @@ const Home: React.FC = () => {
 		itemName: string,
 		count: number,
 	) => {
-		console.log("Creating item...");
-		console.log(userId, folderId, listId, itemName, count);
-		if (!userId || !folderId || !listId) {
+		if (!userId) {
+			alert("You are not logged in");
+			window.location.href = "/login";
+		}
+		if (!folderId || !listId) {
 			console.error("Error creating item: missing user or folder ID");
+			return;
+		}
+		if (itemName.length === 0) {
+			console.error("Error creating item: missing item name");
 			return;
 		}
 		try {
@@ -213,6 +242,8 @@ const Home: React.FC = () => {
 				},
 			);
 			console.log("Item created with ID:", itemRef.id);
+			getListItems(userId, folderId, listId);
+			setItemName("");
 			return itemRef.id;
 		} catch (error) {
 			console.error("Error creating item:", error);
@@ -221,6 +252,7 @@ const Home: React.FC = () => {
 
 	// data related functions
 	const fetchAndSetInitialData = async () => {
+		if (!user) return;
 		try {
 			await getFolders(user.uid);
 		} catch (error) {
@@ -239,14 +271,13 @@ const Home: React.FC = () => {
 	// fetch and set user object
 	useEffect(() => {
 		const unsubscribe = onAuthStateChanged(auth, (user) => {
-			if (user) {
+			if (user !== null) {
 				setUser(user);
 			} else {
 				setUser(null);
 			}
 			setLoading(false); // authentication check is complete
 		});
-
 		// Cleanup the listener on component unmount
 		return () => unsubscribe();
 	}, []); // run only once on mount
@@ -275,6 +306,9 @@ const Home: React.FC = () => {
 	return (
 		<>
 			<div className="container text-center">
+				{user === null && <h1>Welcome to DocIt.</h1>}
+				{loading && <h3>Loading...</h3>}
+				{user === null && <h3>You need to login to use this app.</h3>}
 				<div className="row align-items-start">
 					<div className="col">
 						<h1>My Folders</h1>
@@ -297,6 +331,7 @@ const Home: React.FC = () => {
 							/>
 						</div>
 						<button
+							disabled={user === null}
 							type="button"
 							className="btn btn-light"
 							onClick={() =>
@@ -310,6 +345,11 @@ const Home: React.FC = () => {
 							role="group"
 							aria-label="Vertical button group"
 						>
+							{folders.length === 0 && (
+								<button className="btn btn-light" disabled>
+									You haven't created any folder yet.
+								</button>
+							)}
 							{folders.map((folder) => (
 								<button
 									value={folder.id}
@@ -349,6 +389,7 @@ const Home: React.FC = () => {
 								/>
 							</div>
 							<button
+								disabled={user === null}
 								onClick={() =>
 									createItem(
 										user.uid,
@@ -421,7 +462,7 @@ const Home: React.FC = () => {
 							/>
 						</div>
 						<button
-							disabled={false}
+							disabled={user === null}
 							type="button"
 							className="btn btn-light"
 							onClick={() =>

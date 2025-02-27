@@ -29,7 +29,7 @@ const Navbar: React.FC = () => {
 		e.preventDefault();
 		signOut(auth)
 			.then(() => {
-				window.location.href = "/";
+				window.location.href = "/login";
 				console.log("user is outta here");
 			})
 			.catch((error) => {
