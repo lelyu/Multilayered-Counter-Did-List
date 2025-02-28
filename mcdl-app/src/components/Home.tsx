@@ -10,6 +10,7 @@ import {
 	doc,
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
+import FolderCard from "./FolderCard.tsx";
 
 interface Folder {
 	id: string;
@@ -34,21 +35,22 @@ const Home: React.FC = () => {
 	// user
 	const [user, setUser] = useState(null);
 	const [loading, setLoading] = useState(true);
+	const [viewingDetail, setViewingDetail] = useState(false);
 
 	// item related attributes
 	const [itemName, setItemName] = useState<string>(""); // used for creating a new item; bound with input
 	const [count, setCount] = useState<number>(0); // bound with current item
 	const [currListItems, setCurrListItems] = useState<Item[]>([]); // list of items under currently selected list
-	const [selectedListItem, setSelectedListItem] = useState<string>(""); // used for setting initial data and button click
+	const [selectedListItem, setSelectedListItem] = useState<string>(""); // id of the item. used for setting initial data and button click
 
 	// list related attributes
-	const [selectedList, setSelectedList] = useState<string>(""); // used for setting initial data and button click
+	const [selectedList, setSelectedList] = useState<string>(""); // id of the list. used for setting initial data and button click
 	const [currentLists, setCurrLists] = useState<List[]>([]); // current lists returned by firestore
 	const [currentList, setCurrentList] = useState<string>(""); // specifically used for new list creation
 
 	// folder related attributes
 	const [folders, setFolders] = useState<Folder[]>([]); // current folders returned by firestore
-	const [selectedFolder, setSelectedFolder] = useState<string>(""); // used for setting initial data and button click
+	const [selectedFolder, setSelectedFolder] = useState<string>(""); // id of the folder. used for setting initial data and button click
 	const [currentFolder, setCurrentFolder] = useState<string>(""); // specifically used for new folder creation
 
 	// folder related functions
@@ -110,6 +112,17 @@ const Home: React.FC = () => {
 		if (!user) return;
 		const folderId = e.target.value;
 		setSelectedFolder(folderId);
+	};
+
+	// return the folder object in folders that has folderId
+	const findFolderById = (folderId: string): Folder => {
+		const folder = folders.find((f) => f.id === folderId);
+		return folder;
+	};
+
+	const onViewFolderDetailsClick = (e) => {
+		e.preventDefault();
+		setViewingDetail(true);
 	};
 
 	// list related functions
@@ -432,6 +445,19 @@ const Home: React.FC = () => {
 						>
 							Delete Selected Folder
 						</button>
+						<button
+							disabled={true}
+							className="btn btn-secondary"
+							onClick={() => setViewingDetail(true)}
+						>
+							View Details
+						</button>
+						{/*{viewingDetail && (*/}
+						{/*	<FolderCard*/}
+						{/*		folderId={selectedFolder}*/}
+						{/*		onClose={() => setViewingDetail(false)}*/}
+						{/*	/>*/}
+						{/*)}*/}
 						<div
 							className="btn-group-vertical container"
 							role="group"
