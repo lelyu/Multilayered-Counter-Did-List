@@ -119,6 +119,7 @@ const Navbar: React.FC = () => {
 										<a className="dropdown-item" href="#">
 											iPortfolio
 										</a>
+										`
 									</li>
 									<li>
 										<hr className="dropdown-divider" />

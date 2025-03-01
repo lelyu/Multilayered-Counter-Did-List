@@ -10,7 +10,7 @@ import {
 	doc,
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
-import FolderCard from "./FolderCard.tsx";
+import FolderButton from "./FolderButton.tsx";
 
 interface Folder {
 	id: string;
@@ -114,15 +114,9 @@ const Home: React.FC = () => {
 		setSelectedFolder(folderId);
 	};
 
-	// return the folder object in folders that has folderId
-	const findFolderById = (folderId: string): Folder => {
-		const folder = folders.find((f) => f.id === folderId);
-		return folder;
-	};
-
-	const onViewFolderDetailsClick = (e) => {
-		e.preventDefault();
-		setViewingDetail(true);
+	const new_handleFolderSelection = async (folderId) => {
+		if (!user) return;
+		setSelectedFolder(folderId);
 	};
 
 	// list related functions
@@ -435,29 +429,7 @@ const Home: React.FC = () => {
 						>
 							Create New Folder
 						</button>
-						<button
-							disabled={false}
-							onClick={() =>
-								deleteFolder(user.uid, selectedFolder)
-							}
-							type="button"
-							className="btn btn-danger"
-						>
-							Delete Selected Folder
-						</button>
-						<button
-							disabled={true}
-							className="btn btn-secondary"
-							onClick={() => setViewingDetail(true)}
-						>
-							View Details
-						</button>
-						{/*{viewingDetail && (*/}
-						{/*	<FolderCard*/}
-						{/*		folderId={selectedFolder}*/}
-						{/*		onClose={() => setViewingDetail(false)}*/}
-						{/*	/>*/}
-						{/*)}*/}
+
 						<div
 							className="btn-group-vertical container"
 							role="group"
@@ -468,20 +440,24 @@ const Home: React.FC = () => {
 									You haven't created any folder yet.
 								</button>
 							)}
+
 							{folders.map((folder) => (
-								<button
-									value={folder.id}
-									onClick={handleFolderSelection}
+								<FolderButton
 									key={folder.id}
-									type="button"
-									className={`btn ${selectedFolder === folder.id ? "btn-primary" : "btn-light"} text-start `}
-								>
-									{folder.name}
-									---
-									{folder.dateCreated.getDate()}/
-									{folder.dateCreated.getMonth() + 1}/
-									{folder.dateCreated.getFullYear()}
-								</button>
+									deleteAction={() =>
+										deleteFolder(user.uid, folder.id)
+									}
+									selectAction={() =>
+										new_handleFolderSelection(folder.id)
+									}
+									editAction={() =>
+										new_handleFolderSelection(folder.id)
+									} // Replace or implement editFolder as needed
+									folderId={folder.id}
+									folderName={folder.name}
+									dateCreated={folder.dateCreated}
+									isSelected={folder.id === selectedFolder}
+								/>
 							))}
 						</div>
 					</div>
