@@ -30,7 +30,7 @@ const FolderButton: React.FC<FolderButtonProps> = ({
 				onClick={selectAction}
 				type="button"
 				className={`btn ${isSelected ? "btn-primary" : "btn-light"} text-start`}
-				style={{ width: "70%" }}
+				style={{ width: "80%" }}
 			>
 				{folderName}
 			</button>
@@ -40,7 +40,7 @@ const FolderButton: React.FC<FolderButtonProps> = ({
 				className="btn btn-light dropdown-toggle dropdown-toggle-split"
 				data-bs-toggle="dropdown"
 				aria-expanded="false"
-				style={{ width: "30%" }}
+				style={{ width: "20%" }}
 			>
 				<span className="visually-hidden">See Actions</span>
 			</button>
