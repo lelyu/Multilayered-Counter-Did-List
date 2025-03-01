@@ -2,3 +2,9 @@
     margin: 0 2rem; /* Centers the content horizontally */
     padding: 0 2rem; /* Adds some space on left and right */
 }
+
+.scroll-container {
+    position: relative;
+    height: 30vh; /* Set your desired height */
+    overflow-y: scroll;
+}

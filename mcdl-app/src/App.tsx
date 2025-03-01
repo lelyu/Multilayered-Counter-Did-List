@@ -15,10 +15,19 @@ const App: React.FC = () => {
 		<div className="app-container shadow p-3 mb-5 bg-body-tertiary rounded">
 			<Router>
 				<Navbar />
+
 				<Carousel />
-				<div className="w-25 h-25">
+				<br />
+				<div
+					id="scrollable-container"
+					className="scroll-container"
+					data-bs-spy="scroll"
+					data-bs-target="#navbar-example"
+					tabIndex={0}
+				>
 					<Scrollspy />
 				</div>
+				<br />
 				<Routes>
 					<Route path="/" element={<Home />} />
 					<Route path="/register" element={<Register />} />

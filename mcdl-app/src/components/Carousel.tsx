@@ -1,4 +1,3 @@
-import React from "react";
 import img4 from "../assets/img4.webp";
 import img5 from "../assets/img5.webp";
 import img6 from "../assets/img6.webp";
@@ -32,9 +31,9 @@ const Carousel = () => {
 				<div className="carousel-item active">
 					<img
 						src={img4}
-						style={{ height: "30vh", objectFit: "cover" }}
 						className="d-block w-100 img-thumbnail"
 						alt="..."
+						style={{ height: "33vh", objectFit: "cover" }}
 					/>
 					<div className="carousel-caption d-none d-md-block">
 						<h5 className="text-info">Welcome to DocIt</h5>
@@ -46,9 +45,9 @@ const Carousel = () => {
 				<div className="carousel-item">
 					<img
 						src={img5}
-						style={{ height: "30vh", objectFit: "cover" }}
 						className="d-block w-100 img-thumbnail"
 						alt="..."
+						style={{ height: "33vh", objectFit: "cover" }}
 					/>
 					<div className="carousel-caption d-none d-md-block">
 						<h5 className="text-info">AI Powered</h5>
@@ -60,9 +59,9 @@ const Carousel = () => {
 				<div className="carousel-item">
 					<img
 						src={img6}
-						style={{ height: "30vh", objectFit: "cover" }}
 						className="d-block w-100 img-thumbnail"
 						alt="..."
+						style={{ height: "33vh", objectFit: "cover" }}
 					/>
 					<div className="carousel-caption d-none d-md-block">
 						<h5 className="text-info">One More Thing.</h5>
