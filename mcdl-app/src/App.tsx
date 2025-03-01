@@ -7,13 +7,18 @@ import Register from "./components/Register.tsx";
 import Login from "./components/Login.tsx";
 import "./App.css";
 import FolderCard from "./components/FolderCard.tsx";
+import Carousel from "./components/Carousel.tsx";
+import Scrollspy from "./components/Scrollspy";
 
 const App: React.FC = () => {
 	return (
 		<div className="app-container shadow p-3 mb-5 bg-body-tertiary rounded">
 			<Router>
 				<Navbar />
-
+				<Carousel />
+				<div className="w-25 h-25">
+					<Scrollspy />
+				</div>
 				<Routes>
 					<Route path="/" element={<Home />} />
 					<Route path="/register" element={<Register />} />
