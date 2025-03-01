@@ -11,6 +11,7 @@ import {
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import FolderButton from "./FolderButton.tsx";
+import ListButton from "./ListButton";
 
 interface Folder {
 	id: string;
@@ -215,6 +216,11 @@ const Home: React.FC = () => {
 		e.preventDefault();
 		if (!user) return;
 		const listId = e.target.value;
+		setSelectedList(listId);
+	};
+
+	const new_handleListSelection = async (listId) => {
+		if (!user) return;
 		setSelectedList(listId);
 	};
 
@@ -587,43 +593,12 @@ const Home: React.FC = () => {
 							Create New List
 						</button>
 
-						<button
-							disabled={false}
-							onClick={() =>
-								deleteList(
-									user.uid,
-									selectedFolder,
-									selectedList,
-								)
-							}
-							type="button"
-							className="btn btn-danger"
-						>
-							Delete Selected List
-						</button>
-
 						<div
 							className="btn-group-vertical container"
 							role="group"
 							aria-label="Vertical button group"
 						>
-							{currentLists.length > 0 ? (
-								currentLists.map((list) => (
-									<button
-										onClick={handleListSelection}
-										value={list.id}
-										key={list.id}
-										type="button"
-										className={`btn ${selectedList === list.id ? "btn-primary" : "btn-light"} text-start`}
-									>
-										{list.name}
-										---
-										{list.dateCreated.getDate()}/
-										{list.dateCreated.getMonth() + 1}/
-										{list.dateCreated.getFullYear()}
-									</button>
-								))
-							) : (
+							{currentLists.length === 0 && (
 								<button
 									className="btn btn-light text-start"
 									disabled
@@ -631,6 +606,29 @@ const Home: React.FC = () => {
 									You haven't created any lists yet.
 								</button>
 							)}
+
+							{currentLists.map((ls) => (
+								<ListButton
+									key={ls.id}
+									deleteAction={() =>
+										deleteList(
+											user.uid,
+											selectedFolder,
+											ls.id,
+										)
+									}
+									selectAction={() =>
+										new_handleListSelection(ls.id)
+									}
+									editAction={() =>
+										new_handleListSelection(ls.id)
+									} // Replace or implement editFolder as needed
+									listId={ls.id}
+									listName={ls.name}
+									dateCreated={ls.dateCreated}
+									isSelected={ls.id === selectedList}
+								/>
+							))}
 						</div>
 					</div>
 				</div>
