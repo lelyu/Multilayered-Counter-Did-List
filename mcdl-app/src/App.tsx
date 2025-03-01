@@ -18,15 +18,9 @@ const App: React.FC = () => {
 
 				<Carousel />
 				<br />
-				<div
-					id="scrollable-container"
-					className="scroll-container"
-					data-bs-spy="scroll"
-					data-bs-target="#navbar-example"
-					tabIndex={0}
-				>
-					<Scrollspy />
-				</div>
+
+				<Scrollspy />
+
 				<br />
 				<Routes>
 					<Route path="/" element={<Home />} />
