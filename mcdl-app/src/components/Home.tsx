@@ -12,6 +12,7 @@ import {
 import { onAuthStateChanged } from "firebase/auth";
 import FolderButton from "./FolderButton.tsx";
 import ListButton from "./ListButton";
+import ListItemButton from "./ListItemButton";
 
 interface Folder {
 	id: string;
@@ -343,6 +344,11 @@ const Home: React.FC = () => {
 		setSelectedListItem(itemId);
 	};
 
+	const new_handleListItemSelection = async (itemId) => {
+		if (!user) return;
+		setSelectedListItem(itemId);
+	};
+
 	// data related functions
 	const fetchAndSetInitialData = async () => {
 		if (!user) return;
@@ -467,6 +473,12 @@ const Home: React.FC = () => {
 							))}
 						</div>
 					</div>
+
+
+
+
+
+
 					<div className="col">
 						<h1>My Items</h1>
 						<div>
@@ -487,6 +499,23 @@ const Home: React.FC = () => {
 										setItemName(e.target.value)
 									}
 								/>
+								<span
+									className="input-group-text"
+									id="inputGroup-sizing-default"
+								>
+									Count: {count}
+								</span>
+								<input
+									type="text"
+									className="form-control"
+									aria-label="Sizing example input"
+									aria-describedby="inputGroup-sizing-default"
+									value={count}
+									onChange={(e) =>
+										setCount(e.target.value)
+									}
+								/>
+								
 							</div>
 							<button
 								disabled={user === null}
@@ -503,21 +532,7 @@ const Home: React.FC = () => {
 							>
 								Create new item
 							</button>
-							<button
-								disabled={false}
-								onClick={() =>
-									deleteListItem(
-										user.uid,
-										selectedFolder,
-										selectedList,
-										selectedListItem,
-									)
-								}
-								type="button"
-								className="btn btn-danger"
-							>
-								Delete Selected Item
-							</button>
+							
 							<div
 								className="btn-group-vertical container"
 								role="group"
@@ -531,17 +546,32 @@ const Home: React.FC = () => {
 										You haven't created any items yet.
 									</button>
 								)}
+
 								{currListItems.map((item) => (
-									<button
-										onClick={handleListItemSelection}
+									<ListItemButton
 										key={item.id}
-										value={item.id}
-										type="button"
-										className={`btn ${selectedListItem === item.id ? "btn-primary" : "btn-light"} text-start`}
-									>
-										{item.name}
-									</button>
+										deleteAction={() =>
+											deleteListItem(
+												user.uid,
+												selectedFolder,
+												selectedList,
+												item.id,
+											)
+										}
+										selectAction={() =>
+											new_handleListItemSelection(item.id)
+										}
+										editAction={() =>
+											new_handleListItemSelection(item.id)
+										} // Replace or implement editFolder as needed
+										listItemName={item.name}
+										isSelected={item.id === selectedListItem}
+										count={item.count}
+									/>
 								))}
+
+
+								
 							</div>
 							<button
 								type="button"
@@ -560,6 +590,11 @@ const Home: React.FC = () => {
 							<p>Count: {count}</p>
 						</div>
 					</div>
+
+
+
+
+
 					<div className="col">
 						<h1>My Lists</h1>
 						<div className="input-group mb-3">
