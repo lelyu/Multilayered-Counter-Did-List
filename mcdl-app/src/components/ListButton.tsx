@@ -139,7 +139,7 @@ const ListButton: React.FC<ListButtonProps> = ({
 								type="button"
 								className="btn btn-primary"
 								data-bs-dismiss="modal"
-								onClick={onModalClose}
+								onClick={editAction}
 							>
 								Save
 							</button>
@@ -175,7 +175,6 @@ const ListButton: React.FC<ListButtonProps> = ({
 				<ul className="dropdown-menu">
 					<li>
 						<button
-							onClick={editAction}
 							className="dropdown-item"
 							data-bs-toggle="modal"
 							data-bs-target={`#${modalId}`}
