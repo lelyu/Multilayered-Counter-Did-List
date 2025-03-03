@@ -34,6 +34,7 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 	const [currCount, setCurrCount] = useState(count);
 	const [name, setName] = useState(listItemName);
 	const [description, setDescription] = useState(itemDescription);
+	const [isSaving, setIsSaving] = useState(false);
 	const modalId = `exampleModal-ls-item-${listItemId}`;
 
 	const editAction = async () => {
@@ -76,6 +77,31 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 		} catch (error) {
 			console.log(error);
 		}
+	};
+
+	const handleCountChanges = async (isAdding: boolean) => {
+		// Compute the new count based on the current value.
+		const newCount = isAdding ? currCount + 1 : currCount - 1;
+		// Update the state with the new count.
+		setCurrCount(newCount);
+		setIsSaving(true);
+		// Reference to the document.
+		const itemRef = doc(
+			db,
+			"users",
+			userId,
+			"folders",
+			folderId,
+			"lists",
+			listId,
+			"items",
+			listItemId,
+		);
+		// Update the document with the new count.
+		await updateDoc(itemRef, { count: newCount });
+		setTimeout(() => {
+			setIsSaving(false);
+		}, 300);
 	};
 
 	return (
@@ -164,6 +190,16 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 
 			{/*modal ends*/}
 
+			{isSaving && (
+				<button className="btn btn-primary" type="button" disabled>
+					<span
+						className="spinner-grow spinner-grow-sm"
+						aria-hidden="true"
+					></span>
+					<span role="status">Saving...</span>
+				</button>
+			)}
+
 			<div
 				className="btn-group"
 				role="group"
@@ -177,9 +213,26 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 					style={{ width: "80%" }}
 				>
 					{listItemName}
-					<span> Count: {currCount} </span>
+					<span className="fst-italic"> Count: {currCount} </span>
+				</button>
+
+				<button
+					disabled={isSaving}
+					className="btn btn-light"
+					onClick={() => handleCountChanges(false)}
+				>
+					<i className="bi bi-arrow-left"></i>
 				</button>
 				<button
+					disabled={isSaving}
+					className="btn btn-light"
+					onClick={() => handleCountChanges(true)}
+				>
+					<i className="bi bi-arrow-right"></i>
+				</button>
+
+				<button
+					disabled={isSaving}
 					onClick={selectAction}
 					type="button"
 					className="btn btn-light dropdown-toggle dropdown-toggle-split"
