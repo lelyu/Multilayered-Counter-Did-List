@@ -25,6 +25,7 @@ interface List {
 	id: string;
 	name: string;
 	dateCreated: Date;
+	listDescription?: string;
 }
 
 interface Item {
@@ -112,7 +113,6 @@ const Home: React.FC = () => {
 		}
 	};
 
-
 	const new_handleFolderSelection = async (folderId) => {
 		if (!user) return;
 		setSelectedFolder(folderId);
@@ -137,6 +137,7 @@ const Home: React.FC = () => {
 						id: doc.id,
 						name: doc.data().name,
 						dateCreated: doc.data().dateCreated.toDate(),
+						description: doc.data().description,
 					};
 				});
 				setCurrLists(lists);
@@ -209,7 +210,6 @@ const Home: React.FC = () => {
 			getLists(userId, selectedFolder);
 		}
 	};
-
 
 	const new_handleListSelection = async (listId) => {
 		if (!user) return;
@@ -327,7 +327,6 @@ const Home: React.FC = () => {
 			getListItems(userId, selectedFolder, selectedList);
 		}
 	};
-
 
 	const new_handleListItemSelection = async (itemId) => {
 		if (!user) return;
@@ -453,8 +452,7 @@ const Home: React.FC = () => {
 									folderDescription={folder.description}
 									dateCreated={folder.dateCreated}
 									isSelected={folder.id === selectedFolder}
-									onModalClose={() => getFolders(user.uid)
-									}
+									onModalClose={() => getFolders(user.uid)}
 								/>
 							))}
 						</div>
@@ -492,11 +490,8 @@ const Home: React.FC = () => {
 									aria-label="Sizing example input"
 									aria-describedby="inputGroup-sizing-default"
 									value={count}
-									onChange={(e) =>
-										setCount(e.target.value)
-									}
+									onChange={(e) => setCount(e.target.value)}
 								/>
-								
 							</div>
 							<button
 								disabled={user === null}
@@ -513,7 +508,7 @@ const Home: React.FC = () => {
 							>
 								Create new item
 							</button>
-							
+
 							<div
 								className="btn-group-vertical container"
 								role="group"
@@ -546,13 +541,12 @@ const Home: React.FC = () => {
 											new_handleListItemSelection(item.id)
 										} // Replace or implement editFolder as needed
 										listItemName={item.name}
-										isSelected={item.id === selectedListItem}
+										isSelected={
+											item.id === selectedListItem
+										}
 										count={item.count}
 									/>
 								))}
-
-
-								
 							</div>
 							<button
 								type="button"
@@ -571,7 +565,6 @@ const Home: React.FC = () => {
 							<p>Count: {count}</p>
 						</div>
 					</div>
-
 
 					<div className="col">
 						<h1>My Lists</h1>
@@ -633,13 +626,16 @@ const Home: React.FC = () => {
 									selectAction={() =>
 										new_handleListSelection(ls.id)
 									}
-									editAction={() =>
-										new_handleListSelection(ls.id)
-									} // Replace or implement editFolder as needed
+									userId={user.uid}
+									folderId={selectedFolder}
 									listId={ls.id}
 									listName={ls.name}
+									listDescription={ls.description}
 									dateCreated={ls.dateCreated}
 									isSelected={ls.id === selectedList}
+									onModalClose={() =>
+										getLists(user.uid, selectedFolder)
+									}
 								/>
 							))}
 						</div>
