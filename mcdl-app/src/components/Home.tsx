@@ -18,14 +18,14 @@ interface Folder {
 	id: string;
 	name: string;
 	dateCreated: Date;
-	folderDescription?: string;
+	description?: string;
 }
 
 interface List {
 	id: string;
 	name: string;
 	dateCreated: Date;
-	listDescription?: string;
+	description?: string;
 }
 
 interface Item {
@@ -33,6 +33,7 @@ interface Item {
 	name: string;
 	count: number;
 	dateCreated: Date;
+	description?: string;
 }
 
 const Home: React.FC = () => {
@@ -250,6 +251,9 @@ const Home: React.FC = () => {
 				name: doc.data().name,
 				count: doc.data().count,
 				dateCreated: doc.data().dateCreated.toDate(),
+				description: doc.data().description
+					? doc.data().description
+					: "",
 			};
 		});
 		setCurrListItems(items);
@@ -537,14 +541,23 @@ const Home: React.FC = () => {
 										selectAction={() =>
 											new_handleListItemSelection(item.id)
 										}
-										editAction={() =>
-											new_handleListItemSelection(item.id)
-										} // Replace or implement editFolder as needed
+										userId={user.uid}
+										folderId={selectedFolder}
+										listId={selectedList}
+										listItemId={item.id}
 										listItemName={item.name}
 										isSelected={
 											item.id === selectedListItem
 										}
 										count={item.count}
+										itemDescription={item.description}
+										onModalClose={() =>
+											getListItems(
+												user.uid,
+												selectedFolder,
+												selectedList,
+											)
+										}
 									/>
 								))}
 							</div>
