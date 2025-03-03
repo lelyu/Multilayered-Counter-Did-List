@@ -349,9 +349,9 @@ const Home: React.FC = () => {
 
 	const onCounterClick = (isPlus: boolean): void => {
 		if (isPlus) {
-			setCount((prevCount) => prevCount + 1);
+			setCount((count) => count + 1);
 		} else {
-			setCount((prevCount) => prevCount - 1);
+			setCount((count) => count - 1);
 		}
 	};
 
@@ -489,12 +489,14 @@ const Home: React.FC = () => {
 									Count: {count}
 								</span>
 								<input
-									type="text"
+									type="number"
 									className="form-control"
 									aria-label="Sizing example input"
 									aria-describedby="inputGroup-sizing-default"
 									value={count}
-									onChange={(e) => setCount(e.target.value)}
+									onChange={(e) =>
+										setCount(parseInt(e.target.value))
+									}
 								/>
 							</div>
 							<button
