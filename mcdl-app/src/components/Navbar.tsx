@@ -1,10 +1,10 @@
-import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 import React, { useState, useEffect } from "react";
+import { auth } from "../config/firebase";
 
 const Navbar: React.FC = () => {
 	const [user, setUser] = useState(null);
 	const [loading, setLoading] = useState(true); // loading state
-	const auth = getAuth();
 
 	useEffect(() => {
 		const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -22,7 +22,15 @@ const Navbar: React.FC = () => {
 	}, []); // run only once on mount
 
 	if (loading) {
-		return <div>Loading...</div>; // or return null/placeholder
+		return (
+			<button className="btn btn-primary" type="button" disabled>
+				<span
+					className="spinner-border spinner-border-sm"
+					aria-hidden="true"
+				></span>
+				<span role="status">Loading...</span>
+			</button>
+		); // or return null/placeholder
 	}
 
 	const logout = (e: React.MouseEvent<HTMLButtonElement>) => {

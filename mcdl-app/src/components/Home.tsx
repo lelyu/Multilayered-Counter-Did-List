@@ -5,7 +5,6 @@ import {
 	getDocs,
 	addDoc,
 	serverTimestamp,
-	updateDoc,
 	deleteDoc,
 	doc,
 } from "firebase/firestore";
@@ -93,7 +92,7 @@ const Home: React.FC = () => {
 					dateCreated: serverTimestamp(),
 				},
 			);
-			getFolders(userId);
+			await getFolders(userId);
 			setCurrentFolder("");
 			return folderRef.id;
 		} catch (error) {
@@ -110,11 +109,11 @@ const Home: React.FC = () => {
 		} catch (error) {
 			console.error("Error deleting folder:", error);
 		} finally {
-			getFolders(userId);
+			await getFolders(userId);
 		}
 	};
 
-	const new_handleFolderSelection = async (folderId) => {
+	const new_handleFolderSelection = async (folderId: string) => {
 		if (!user) return;
 		setSelectedFolder(folderId);
 	};
@@ -180,7 +179,7 @@ const Home: React.FC = () => {
 					dateCreated: serverTimestamp(),
 				},
 			);
-			getLists(userId, folderId);
+			await getLists(userId, folderId);
 			setCurrentList("");
 			return listRef.id; // Return list id for further nesting
 		} catch (error) {
@@ -208,11 +207,11 @@ const Home: React.FC = () => {
 		} catch (error) {
 			console.error("Error deleting folder:", error);
 		} finally {
-			getLists(userId, selectedFolder);
+			await getLists(userId, selectedFolder);
 		}
 	};
 
-	const new_handleListSelection = async (listId) => {
+	const new_handleListSelection = async (listId: string) => {
 		if (!user) return;
 		setSelectedList(listId);
 	};
@@ -297,7 +296,7 @@ const Home: React.FC = () => {
 					count: count,
 				},
 			);
-			getListItems(userId, folderId, listId);
+			await getListItems(userId, folderId, listId);
 			setItemName("");
 			return itemRef.id;
 		} catch (error) {
@@ -328,11 +327,11 @@ const Home: React.FC = () => {
 		} catch (error) {
 			console.error("Error deleting folder:", error);
 		} finally {
-			getListItems(userId, selectedFolder, selectedList);
+			await getListItems(userId, selectedFolder, selectedList);
 		}
 	};
 
-	const new_handleListItemSelection = async (itemId) => {
+	const new_handleListItemSelection = async (itemId: string) => {
 		if (!user) return;
 		setSelectedListItem(itemId);
 	};
@@ -372,7 +371,7 @@ const Home: React.FC = () => {
 	// whenever user changes get new folders
 	useEffect(() => {
 		if (user) {
-			fetchAndSetInitialData();
+			fetchAndSetInitialData().then();
 		}
 	}, [user]); // run when user changes
 
@@ -388,7 +387,7 @@ const Home: React.FC = () => {
 	// whenever selected list changes get new items
 	useEffect(() => {
 		if (user !== null) {
-			getListItems(user.uid, selectedFolder, selectedList);
+			getListItems(user.uid, selectedFolder, selectedList).then();
 		}
 	}, [selectedList]);
 
@@ -396,7 +395,15 @@ const Home: React.FC = () => {
 		<>
 			<div className="container text-center">
 				{user === null && <h1>Welcome to DocIt.</h1>}
-				{loading && <h3>Loading...</h3>}
+				{loading && (
+					<button className="btn btn-primary" type="button" disabled>
+						<span
+							className="spinner-border spinner-border-sm"
+							aria-hidden="true"
+						></span>
+						<span role="status">Loading...</span>
+					</button>
+				)}
 				{user === null && <h3>You need to login to use this app.</h3>}
 				<div className="row align-items-start">
 					<div className="col">
