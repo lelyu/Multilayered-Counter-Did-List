@@ -18,6 +18,7 @@ interface Folder {
 	id: string;
 	name: string;
 	dateCreated: Date;
+	folderDescription?: string;
 }
 
 interface List {
@@ -37,7 +38,6 @@ const Home: React.FC = () => {
 	// user
 	const [user, setUser] = useState(null);
 	const [loading, setLoading] = useState(true);
-	const [viewingDetail, setViewingDetail] = useState(false);
 
 	// item related attributes
 	const [itemName, setItemName] = useState<string>(""); // used for creating a new item; bound with input
@@ -65,6 +65,9 @@ const Home: React.FC = () => {
 				id: doc.id,
 				name: doc.data().name,
 				dateCreated: doc.data().dateCreated.toDate(),
+				description: doc.data().description
+					? doc.data().description
+					: "",
 			};
 		});
 		setFolders(folders);
@@ -109,12 +112,6 @@ const Home: React.FC = () => {
 		}
 	};
 
-	const handleFolderSelection = async (e) => {
-		e.preventDefault();
-		if (!user) return;
-		const folderId = e.target.value;
-		setSelectedFolder(folderId);
-	};
 
 	const new_handleFolderSelection = async (folderId) => {
 		if (!user) return;
@@ -213,12 +210,6 @@ const Home: React.FC = () => {
 		}
 	};
 
-	const handleListSelection = async (e) => {
-		e.preventDefault();
-		if (!user) return;
-		const listId = e.target.value;
-		setSelectedList(listId);
-	};
 
 	const new_handleListSelection = async (listId) => {
 		if (!user) return;
@@ -337,12 +328,6 @@ const Home: React.FC = () => {
 		}
 	};
 
-	const handleListItemSelection = async (e) => {
-		e.preventDefault();
-		if (!user) return;
-		const itemId = e.target.value;
-		setSelectedListItem(itemId);
-	};
 
 	const new_handleListItemSelection = async (itemId) => {
 		if (!user) return;
@@ -462,22 +447,18 @@ const Home: React.FC = () => {
 									selectAction={() =>
 										new_handleFolderSelection(folder.id)
 									}
-									editAction={() =>
-										new_handleFolderSelection(folder.id)
-									} // Replace or implement editFolder as needed
+									userId={user.uid}
 									folderId={folder.id}
 									folderName={folder.name}
+									folderDescription={folder.description}
 									dateCreated={folder.dateCreated}
 									isSelected={folder.id === selectedFolder}
+									onModalClose={() => getFolders(user.uid)
+									}
 								/>
 							))}
 						</div>
 					</div>
-
-
-
-
-
 
 					<div className="col">
 						<h1>My Items</h1>
@@ -590,9 +571,6 @@ const Home: React.FC = () => {
 							<p>Count: {count}</p>
 						</div>
 					</div>
-
-
-
 
 
 					<div className="col">
