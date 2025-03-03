@@ -191,7 +191,7 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 			{/*modal ends*/}
 
 			{isSaving && (
-				<button className="btn btn-primary" type="button" disabled>
+				<button className="btn btn-success" type="button" disabled>
 					<span
 						className="spinner-grow spinner-grow-sm"
 						aria-hidden="true"
