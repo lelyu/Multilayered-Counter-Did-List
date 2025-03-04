@@ -502,7 +502,7 @@ const Home: React.FC = () => {
 									aria-describedby="inputGroup-sizing-default"
 									value={count}
 									onChange={(e) =>
-										setCount(parseInt(e.target.value))
+										setCount(Number(e.target.value))
 									}
 								/>
 							</div>

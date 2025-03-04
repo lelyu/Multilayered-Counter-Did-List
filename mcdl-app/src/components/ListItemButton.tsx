@@ -81,7 +81,9 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 
 	const handleCountChanges = async (isAdding: boolean) => {
 		// Compute the new count based on the current value.
-		const newCount = isAdding ? currCount + 1 : currCount - 1;
+		const newCount = isAdding
+			? Number(currCount) + 1
+			: Number(currCount) - 1;
 		// Update the state with the new count.
 		setCurrCount(newCount);
 		setIsSaving(true);
