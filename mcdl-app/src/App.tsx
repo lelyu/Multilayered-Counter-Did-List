@@ -6,7 +6,7 @@ import Home from "./components/Home";
 import Register from "./components/Register.tsx";
 import Login from "./components/Login.tsx";
 import "./App.css";
-import FolderCard from "./components/FolderCard.tsx";
+import ChatUI from "./components/ChatUI.tsx";
 import Carousel from "./components/Carousel.tsx";
 import Scrollspy from "./components/Scrollspy";
 
@@ -26,7 +26,7 @@ const App: React.FC = () => {
 					<Route path="/" element={<Home />} />
 					<Route path="/register" element={<Register />} />
 					<Route path="/login" element={<Login />} />
-					<Route path="/card" element={<FolderCard />} />
+					<Route path="/chat" element={<ChatUI />} />
 				</Routes>
 
 				<Footer />

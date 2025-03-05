@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { auth, db, model } from "../config/firebase";
+import { auth, db } from "../config/firebase";
 import {
 	collection,
 	getDocs,
@@ -390,24 +390,6 @@ const Home: React.FC = () => {
 			getListItems(user.uid, selectedFolder, selectedList).then();
 		}
 	}, [selectedList]);
-
-	// Vertex AI
-	async function run() {
-		// Provide a prompt that contains text
-		const prompt = "Write a hello message to the user referencing a poem.";
-
-		// To generate text output, call generateContent with the text input
-		const result = await model.generateContent(prompt);
-
-		const response = result.response;
-		const text = response.text();
-		console.log(text);
-	}
-
-	// run sample AI
-	// useEffect(() => {
-	// 	run();
-	// }, []);
 
 	return (
 		<>
