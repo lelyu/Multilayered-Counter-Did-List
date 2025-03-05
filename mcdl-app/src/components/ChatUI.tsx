@@ -1,5 +1,6 @@
-import React, { useState } from "react";
-import { model } from "../config/firebase";
+import React, { useEffect, useState } from "react";
+import { model, auth } from "../config/firebase";
+import { onAuthStateChanged } from "firebase/auth";
 
 type ChatMessage = {
 	role: "user" | "model";
@@ -7,6 +8,7 @@ type ChatMessage = {
 };
 
 const ChatUI: React.FC = () => {
+	const [isLoggedIn, setisLoggedIn] = useState<boolean>(false);
 	const [chatHistory, setChatHistory] = useState<ChatMessage[]>([
 		{
 			role: "user",
@@ -72,9 +74,27 @@ const ChatUI: React.FC = () => {
 		setChatHistory([]);
 	};
 
+	useEffect(() => {
+		onAuthStateChanged(auth, (user) => {
+			if (user) {
+				// User is signed in, see docs for a list of available properties
+				// https://firebase.google.com/docs/reference/js/auth.user
+				const uid = user.uid;
+				setisLoggedIn(true);
+				// ...
+			} else {
+				// User is signed out
+				// ...
+				setisLoggedIn(false);
+			}
+		});
+	}, []);
+
 	return (
 		<>
+			{!isLoggedIn && <h4>You must login to use AI</h4>}
 			<button
+				disabled={!isLoggedIn}
 				className="btn btn-primary"
 				type="button"
 				data-bs-toggle="offcanvas"
@@ -92,7 +112,7 @@ const ChatUI: React.FC = () => {
 			>
 				<div className="offcanvas-header">
 					<h5 className="offcanvas-title" id="offcanvasRightLabel">
-						Chat with Gemini
+						Chat with Kian
 					</h5>
 					<button
 						type="button"
@@ -119,7 +139,7 @@ const ChatUI: React.FC = () => {
 											: "secondary"
 									} me-2`}
 								>
-									{msg.role === "user" ? "You" : "Gemini"}
+									{msg.role === "user" ? "You" : "Kian"}
 								</span>
 								<span>{msg.text}</span>
 							</div>
@@ -136,15 +156,17 @@ const ChatUI: React.FC = () => {
 							type="text"
 							className="form-control"
 							aria-label="Chat input"
-							placeholder="Chat with Gemini"
+							placeholder="Chat history won't be saved"
 						/>
 						<button
+							disabled={!isLoggedIn}
 							type="submit"
 							className="btn btn-outline-secondary"
 						>
 							<i className="bi bi-send"></i>
 						</button>
 						<button
+							disabled={!isLoggedIn}
 							type="button"
 							className="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split"
 							data-bs-toggle="dropdown"
