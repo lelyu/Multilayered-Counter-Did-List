@@ -12,6 +12,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import FolderButton from "./FolderButton.tsx";
 import ListButton from "./ListButton";
 import ListItemButton from "./ListItemButton";
+import ChatUI from "./ChatUI.tsx";
 
 interface Folder {
 	id: string;

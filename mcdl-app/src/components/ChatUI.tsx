@@ -142,7 +142,7 @@ const ChatUI: React.FC = () => {
 							type="submit"
 							className="btn btn-outline-secondary"
 						>
-							Submit
+							<i className="bi bi-send"></i>
 						</button>
 						<button
 							type="button"
@@ -156,11 +156,7 @@ const ChatUI: React.FC = () => {
 						</button>
 						<ul className="dropdown-menu dropdown-menu-end">
 							<li>
-								<a
-									className="dropdown-item"
-									href="#"
-									onClick={handleSubmit}
-								>
+								<a className="dropdown-item" href="#">
 									Submit
 								</a>
 							</li>

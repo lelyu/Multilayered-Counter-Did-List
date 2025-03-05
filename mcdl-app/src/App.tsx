@@ -28,7 +28,7 @@ const App: React.FC = () => {
 					<Route path="/login" element={<Login />} />
 					<Route path="/chat" element={<ChatUI />} />
 				</Routes>
-
+				<ChatUI />
 				<Footer />
 			</Router>
 		</div>
