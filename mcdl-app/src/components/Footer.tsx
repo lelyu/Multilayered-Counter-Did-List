@@ -13,7 +13,8 @@ function Footer() {
 						></i>
 					</a>
 					<span className="mb-3 mb-md-0 text-body-secondary">
-						© 2025 Designed by Le Lyu in Massachusetts.
+						© 2025 Designed and Implemented by Le Lyu in
+						Massachusetts.
 					</span>
 				</div>
 
