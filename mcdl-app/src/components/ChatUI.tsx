@@ -1,24 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { model, auth } from "../config/firebase";
 import { onAuthStateChanged } from "firebase/auth";
+import { getAllFolders } from "../utils/getUserData.ts";
 
-type ChatMessage = {
+interface ChatMessage {
 	role: "user" | "model";
 	text: string;
-};
+}
 
 const ChatUI: React.FC = () => {
-	const [isLoggedIn, setisLoggedIn] = useState<boolean>(false);
-	const [chatHistory, setChatHistory] = useState<ChatMessage[]>([
-		{
-			role: "user",
-			text: "Hello, I have 2 dogs in my house.",
-		},
-		{
-			role: "model",
-			text: "Great to meet you. What would you like to know?",
-		},
-	]);
+	const [userId, setUserId] = useState<string | null>(null);
+	const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+	const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
 	const [userPrompt, setUserPrompt] = useState("");
 
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -45,6 +38,7 @@ const ChatUI: React.FC = () => {
 
 		// Start streaming the AI response.
 		const result = await chat.sendMessageStream(userPrompt);
+
 		let aiResponse = "";
 		// Add a placeholder AI message.
 		setChatHistory((prev) => [...prev, { role: "model", text: "" }]);
@@ -79,13 +73,23 @@ const ChatUI: React.FC = () => {
 			if (user) {
 				// User is signed in, see docs for a list of available properties
 				// https://firebase.google.com/docs/reference/js/auth.user
-				const uid = user.uid;
-				setisLoggedIn(true);
-				// ...
+				console.log(user.uid);
+				setUserId(user.uid);
+				setIsLoggedIn(true);
+				setChatHistory([
+					{
+						role: "user",
+						text: `Hello, my userId is ${user.uid}`,
+					},
+					{
+						role: "model",
+						text: "Great to meet you. What would you like to know?",
+					},
+				]);
 			} else {
 				// User is signed out
 				// ...
-				setisLoggedIn(false);
+				setIsLoggedIn(false);
 			}
 		});
 	}, []);
