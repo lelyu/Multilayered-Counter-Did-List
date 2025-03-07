@@ -75,6 +75,7 @@ const getAllListItems = async ({ userId }) => {
 		return {
 			id: item.id,
 			name: item.data().name,
+			count: item.data().count,
 			dateCreated: item.data().dateCreated.toDate().toLocaleString(),
 			description: item.data().description ? item.data().description : "",
 			dateModified: item.data().dateModified

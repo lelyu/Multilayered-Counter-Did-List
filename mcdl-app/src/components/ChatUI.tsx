@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { model, auth } from "../config/firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { getAllFolders, getAllLists } from "../utils/getUserData.ts";
+import {
+	getAllFolders,
+	getAllLists,
+	getAllListItems,
+} from "../utils/getUserData.ts";
 
 interface ChatMessage {
 	role: "user" | "model";
@@ -56,6 +60,12 @@ const ChatUI: React.FC = () => {
 						aggregatedResults.push({
 							name: call.name,
 							response: { lists: listsArray },
+						});
+					} else if (call.name === "getAllItems") {
+						const itemsArray = await getAllListItems(call.args);
+						aggregatedResults.push({
+							name: call.name,
+							response: { items: itemsArray },
 						});
 					}
 				} catch (error) {
