@@ -23,25 +23,6 @@ const getAllFolders = async ({ userId }) => {
 	return folders;
 };
 
-// testing
-// const getAllFolders = async ({ userId }) => {
-// 	if (!userId) return;
-// 	console.log("User ID:", userId, typeof userId);
-// 	const foldersRef = collection(db, "users", userId, "folders");
-// 	const foldersSnapshot = await getDocs(foldersRef);
-// 	const folders = foldersSnapshot.docs.map((folder) => ({
-// 		id: folder.id,
-// 		name: folder.data().name,
-// 		dateCreated: folder.data().dateCreated.toDate(),
-// 		description: folder.data().description ? folder.data().description : "",
-// 		dateModified: folder.data().dateModified
-// 			? folder.data().dateModified.toDate()
-// 			: "",
-// 	}));
-// 	// Return the first folder object, or null if no folders exist.
-// 	return folders.length > 0 ? folders[0] : null;
-// };
-
 const getAllLists = async (userId, folderId) => {
 	if (!userId || !folderId) return;
 	const listsRef = collection(
