@@ -12,7 +12,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import FolderButton from "./FolderButton.tsx";
 import ListButton from "./ListButton";
 import ListItemButton from "./ListItemButton";
-import { getAllListsTest } from "../utils/getUserData.ts";
+import { getAllListItems } from "../utils/getUserData.ts";
 
 interface Folder {
 	id: string;
@@ -668,7 +668,7 @@ const Home: React.FC = () => {
 			</div>
 			<button
 				className="btn btn-danger"
-				onClick={() => getAllListsTest({ userId: user.uid })}
+				onClick={() => getAllListItems({ userId: user.uid })}
 			>
 				Click Me to Test Query API
 			</button>

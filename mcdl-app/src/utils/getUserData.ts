@@ -64,32 +64,26 @@ const getAllListsTest = async ({ userId }) => {
 	return [];
 };
 
-const getAllListItems = async (userId, folderId, listId) => {
-	if (!userId || !folderId || !listId) return;
-	const itemsRef = collection(
-		db,
-		"users",
-		userId,
-		"folders",
-		folderId,
-		"lists",
-		listId,
-		"items",
+const getAllListItems = async ({ userId }) => {
+	if (!userId) return;
+	const items = query(
+		collectionGroup(db, "items"),
+		where("createdBy", "==", userId),
 	);
-	const itemsSnapshot = await getDocs(itemsRef);
-	const items = itemsSnapshot.docs.map((item) => {
+	const querySnapshot = await getDocs(items);
+	const res = querySnapshot.docs.map((item) => {
 		return {
 			id: item.id,
 			name: item.data().name,
-			dateCreated: item.data().dateCreated.toDate(),
+			dateCreated: item.data().dateCreated.toDate().toLocaleString(),
 			description: item.data().description ? item.data().description : "",
 			dateModified: item.data().dateModified
-				? item.data().dateModified.toDate()
+				? item.data().dateModified.toDate().toDate().toLocaleString()
 				: "",
-			count: item.data().count,
 		};
 	});
-	return items;
+	console.log(res);
+	return res;
 };
 
 const getSingleFolderByName = async (userId, folderName) => {
@@ -106,4 +100,4 @@ const getSingleListByName = async (userId, listName) => {};
 
 const getSingleListItemByName = async (userId, itemName) => {};
 
-export { getAllFolders, getAllLists, getAllListsTest };
+export { getAllFolders, getAllLists, getAllListsTest, getAllListItems };
