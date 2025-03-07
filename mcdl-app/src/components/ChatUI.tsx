@@ -36,26 +36,54 @@ const ChatUI: React.FC = () => {
 			},
 		});
 
-		// Start streaming the AI response.
-		const result = await chat.sendMessageStream(userPrompt);
+		// Send the user's question (the prompt) to the model using multi-turn chat.
+		let result = await chat.sendMessage(userPrompt);
+		const functionCalls = result.response.functionCalls();
 
-		let aiResponse = "";
-		// Add a placeholder AI message.
-		setChatHistory((prev) => [...prev, { role: "model", text: "" }]);
-
-		// Update the AI message as each chunk arrives.
-		for await (const chunk of result.stream) {
-			const chunkText = chunk.text();
-			aiResponse += chunkText;
-			setChatHistory((prev) => {
-				const updated = [...prev];
-				updated[updated.length - 1] = {
-					role: "model",
-					text: aiResponse,
-				};
-				return updated;
-			});
+		let functionCall;
+		let functionResult;
+		// When the model responds with one or more function calls, invoke the function(s).
+		if (functionCalls && functionCalls.length > 0) {
+			for (const call of functionCalls) {
+				if (call.name === "getAllFolders") {
+					// Forward the structured input data prepared by the model
+					// to the hypothetical external API.
+					const foldersArray = await getAllFolders(call.args);
+					functionResult = { folders: foldersArray };
+					functionCall = call;
+				}
+			}
 		}
+
+		// Send the function response to the model.
+		if (functionResult) {
+			result = await chat.sendMessage([
+				{
+					functionResponse: {
+						name: functionCall.name,
+						response: functionResult,
+					},
+				},
+			]);
+		} else {
+			result = await chat.sendMessage(userPrompt);
+		}
+
+		// Immediately add a loading indicator to the chat history.
+		setChatHistory((prev) => [
+			...prev,
+			{ role: "model", text: "Loading..." },
+		]);
+
+		// Accumulate the streaming response.
+		const aiResponse = result.response.text();
+
+		// Once the stream is complete, update the chat history with the final response.
+		setChatHistory((prev) => {
+			const updated = [...prev];
+			updated[updated.length - 1] = { role: "model", text: aiResponse };
+			return updated;
+		});
 		setUserPrompt("");
 	};
 
