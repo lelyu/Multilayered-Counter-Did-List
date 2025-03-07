@@ -7,7 +7,7 @@ import {
 	signInWithPopup,
 } from "firebase/auth";
 import React, { useState, useEffect } from "react";
-import { addDoc, collection } from "firebase/firestore";
+import { addDoc, collection, doc, setDoc } from "firebase/firestore";
 import { db, auth } from "../config/firebase";
 
 const Login: React.FC = () => {
@@ -51,15 +51,12 @@ const Login: React.FC = () => {
 				: [];
 
 			// Create a user document in the "users" collection.
-			const docRef = await addDoc(collection(db, "users"), {
+			await setDoc(doc(db, "users", user.uid), {
 				userId: user.uid,
 				firstName,
 				lastName,
 				email: user.email,
 			});
-
-			console.log("Document written with ID:", docRef.id);
-			console.log(user);
 
 			// Redirect to home.
 			window.location.href = "/";

@@ -1,6 +1,12 @@
 import { auth, db } from "../config/firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import {
+	addDoc,
+	setDoc,
+	collection,
+	serverTimestamp,
+	doc,
+} from "firebase/firestore";
 import React, { useState } from "react";
 
 const Register: React.FC = () => {
@@ -40,14 +46,12 @@ const Register: React.FC = () => {
 			const user = userCredential.user;
 
 			// Create a user document in the "users" collection
-			const docRef = await addDoc(collection(db, "users"), {
+			await setDoc(doc(db, "users", user.uid), {
 				userId: user.uid,
 				firstName: firstName,
 				lastName: lastName,
 				email: email,
 			});
-			console.log("Document written with ID:", docRef.id);
-
 			// Redirect after document creation is complete
 			window.location.href = "/";
 		} catch (error) {

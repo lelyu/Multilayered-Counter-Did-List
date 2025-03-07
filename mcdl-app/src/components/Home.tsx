@@ -86,13 +86,12 @@ const Home: React.FC = () => {
 			return;
 		}
 		try {
-			const folderRef = await addDoc(
-				collection(db, "users", userId, "folders"),
-				{
-					name: folderName,
-					dateCreated: serverTimestamp(),
-				},
-			);
+			const folderRef = collection(db, "users", userId, "folders");
+			await addDoc(folderRef, {
+				createdBy: userId,
+				name: folderName,
+				dateCreated: serverTimestamp(),
+			});
 			await getFolders(userId);
 			setCurrentFolder("");
 			return folderRef.id;
@@ -176,6 +175,7 @@ const Home: React.FC = () => {
 			const listRef = await addDoc(
 				collection(db, "users", userId, "folders", folderId, "lists"),
 				{
+					createdBy: userId,
 					name: listName,
 					dateCreated: serverTimestamp(),
 				},
@@ -292,6 +292,7 @@ const Home: React.FC = () => {
 					"items",
 				),
 				{
+					createdBy: userId,
 					name: itemName,
 					dateCreated: serverTimestamp(),
 					count: count,
