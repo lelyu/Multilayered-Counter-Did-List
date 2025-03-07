@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { model, auth } from "../config/firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { getAllFolders } from "../utils/getUserData.ts";
+import { getAllFolders, getAllLists } from "../utils/getUserData.ts";
 
 interface ChatMessage {
 	role: "user" | "model";
@@ -32,7 +32,7 @@ const ChatUI: React.FC = () => {
 				parts: [{ text: msg.text }],
 			})),
 			generationConfig: {
-				maxOutputTokens: 100,
+				maxOutputTokens: 300,
 			},
 		});
 
@@ -40,32 +40,44 @@ const ChatUI: React.FC = () => {
 		let result = await chat.sendMessage(userPrompt);
 		const functionCalls = result.response.functionCalls();
 
-		let functionCall;
-		let functionResult;
-		// When the model responds with one or more function calls, invoke the function(s).
 		if (functionCalls && functionCalls.length > 0) {
+			const aggregatedResults = [];
+
 			for (const call of functionCalls) {
-				if (call.name === "getAllFolders") {
-					// Forward the structured input data prepared by the model
-					// to the hypothetical external API.
-					const foldersArray = await getAllFolders(call.args);
-					functionResult = { folders: foldersArray };
-					functionCall = call;
+				try {
+					if (call.name === "getAllFolders") {
+						const foldersArray = await getAllFolders(call.args);
+						aggregatedResults.push({
+							name: call.name,
+							response: { folders: foldersArray },
+						});
+					} else if (call.name === "getAllLists") {
+						const listsArray = await getAllLists(call.args);
+						aggregatedResults.push({
+							name: call.name,
+							response: { lists: listsArray },
+						});
+					}
+				} catch (error) {
+					// Handle individual function call error
+					aggregatedResults.push({
+						name: call.name,
+						response: { error: error.message },
+					});
 				}
 			}
-		}
-
-		// Send the function response to the model.
-		if (functionResult) {
-			result = await chat.sendMessage([
-				{
+			console.log(aggregatedResults);
+			// Send all aggregated function responses to the model.
+			result = await chat.sendMessage(
+				aggregatedResults.map((fnResult) => ({
 					functionResponse: {
-						name: functionCall.name,
-						response: functionResult,
+						name: fnResult.name,
+						response: fnResult.response,
 					},
-				},
-			]);
+				})),
+			);
 		} else {
+			// Fallback: resend the original user prompt if no function calls are present.
 			result = await chat.sendMessage(userPrompt);
 		}
 

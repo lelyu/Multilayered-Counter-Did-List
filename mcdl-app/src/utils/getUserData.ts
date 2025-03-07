@@ -1,5 +1,11 @@
 import { auth, db } from "../config/firebase";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import {
+	collection,
+	getDocs,
+	query,
+	where,
+	collectionGroup,
+} from "firebase/firestore";
 
 // function calling (tools) for the Vertex API
 
@@ -23,29 +29,39 @@ const getAllFolders = async ({ userId }) => {
 	return folders;
 };
 
-const getAllLists = async (userId, folderId) => {
-	if (!userId || !folderId) return;
-	const listsRef = collection(
-		db,
-		"users",
-		userId,
-		"folders",
-		folderId,
-		"lists",
+const getAllLists = async ({ userId }) => {
+	if (!userId) return;
+	const lists = query(
+		collectionGroup(db, "lists"),
+		where("createdBy", "==", userId),
 	);
-	const listsSnapshot = await getDocs(listsRef);
-	const lists = listsSnapshot.docs.map((list) => {
+	const querySnapshot = await getDocs(lists);
+	const res = querySnapshot.docs.map((ls) => {
 		return {
-			id: list.id,
-			name: list.data().name,
-			dateCreated: list.data().dateCreated.toDate(),
-			description: list.data().description ? list.data().description : "",
-			dateModified: list.data().dateModified
-				? list.data().dateModified.toDate()
+			id: ls.id,
+			name: ls.data().name,
+			dateCreated: ls.data().dateCreated.toDate().toLocaleString(),
+			description: ls.data().description ? ls.data().description : "",
+			dateModified: ls.data().dateModified
+				? ls.data().dateModified.toDate().toDate().toLocaleString()
 				: "",
 		};
 	});
-	return lists;
+	return res;
+};
+
+const getAllListsTest = async ({ userId }) => {
+	if (!userId) return;
+	const lists = query(
+		collectionGroup(db, "lists"),
+		where("createdBy", "==", userId),
+	);
+	const querySnapshot = await getDocs(lists);
+
+	querySnapshot.forEach((doc) => {
+		console.log(doc.id, " => ", doc.data());
+	});
+	return [];
 };
 
 const getAllListItems = async (userId, folderId, listId) => {
@@ -90,4 +106,4 @@ const getSingleListByName = async (userId, listName) => {};
 
 const getSingleListItemByName = async (userId, itemName) => {};
 
-export { getAllFolders, getSingleListByName, getSingleListItemByName };
+export { getAllFolders, getAllLists, getAllListsTest };
