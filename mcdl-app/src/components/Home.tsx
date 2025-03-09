@@ -9,6 +9,7 @@ import {
 	doc,
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
+import { httpsCallable, getFunctions } from "firebase/functions";
 import FolderButton from "./FolderButton.tsx";
 import ListButton from "./ListButton";
 import ListItemButton from "./ListItemButton";
@@ -393,6 +394,20 @@ const Home: React.FC = () => {
 		}
 	}, [selectedList]);
 
+	// testing cloud functions API
+	const onTestClick = async () => {
+		try {
+			const testPrompt = httpsCallable(getFunctions(), "summarizeData");
+			console.log("testPrompt:", testPrompt);
+			const response = await testPrompt({
+				prompt: "Tell me about yourself!",
+			});
+			console.log(response);
+		} catch (error) {
+			console.error("Error calling generateResponse:", error);
+		}
+	};
+
 	return (
 		<>
 			<div className="container text-center">
@@ -666,10 +681,7 @@ const Home: React.FC = () => {
 					</div>
 				</div>
 			</div>
-			<button
-				className="btn btn-danger"
-				onClick={() => getAllListItems({ userId: user.uid })}
-			>
+			<button className="btn btn-danger" onClick={() => onTestClick()}>
 				Click Me to Test Query API
 			</button>
 		</>
