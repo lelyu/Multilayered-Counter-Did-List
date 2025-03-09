@@ -17,10 +17,35 @@ const ChatUI: React.FC = () => {
 	const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 	const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
 	const [userPrompt, setUserPrompt] = useState("");
+	const [isLoading, setIsLoading] = useState(false);
+	const [lastRequestTime, setLastRequestTime] = useState<number>(0);
 
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
+		const now = Date.now();
+
+		// 1. Throttle: ensure 30 seconds between requests.
+		// if (now - lastRequestTime < 30000) {
+		// 	alert("Please wait 30 seconds between requests.");
+		// 	return;
+		// }
+
+		// 2. Prevent sending another user message if waiting for response.
+		if (
+			chatHistory.length > 0 &&
+			chatHistory[chatHistory.length - 1].role === "user"
+		) {
+			alert(
+				"Please wait for the response before sending another message.",
+			);
+			return;
+		}
+
 		if (!userPrompt.trim()) return;
+
+		// Set loading and record the time
+		setIsLoading(true);
+		setLastRequestTime(now);
 
 		// Add the user's message to the chat history.
 		const newChatHistory = [
@@ -40,73 +65,85 @@ const ChatUI: React.FC = () => {
 			},
 		});
 
-		// Send the user's question (the prompt) to the model using multi-turn chat.
-		let result = await chat.sendMessage(userPrompt);
-		const functionCalls = result.response.functionCalls();
+		try {
+			// Send the user's question (the prompt) to the model using multi-turn chat.
+			let result = await chat.sendMessage(userPrompt);
+			const functionCalls = result.response.functionCalls();
 
-		if (functionCalls && functionCalls.length > 0) {
-			const aggregatedResults = [];
+			if (functionCalls && functionCalls.length > 0) {
+				const aggregatedResults: any[] = [];
 
-			for (const call of functionCalls) {
-				try {
-					if (call.name === "getAllFolders") {
-						const foldersArray = await getAllFolders(call.args);
+				for (const call of functionCalls) {
+					try {
+						if (call.name === "getAllFolders") {
+							const foldersArray = await getAllFolders(call.args);
+							aggregatedResults.push({
+								name: call.name,
+								response: { folders: foldersArray },
+							});
+						} else if (call.name === "getAllLists") {
+							const listsArray = await getAllLists(call.args);
+							aggregatedResults.push({
+								name: call.name,
+								response: { lists: listsArray },
+							});
+						} else if (call.name === "getAllItems") {
+							const itemsArray = await getAllListItems(call.args);
+							aggregatedResults.push({
+								name: call.name,
+								response: { items: itemsArray },
+							});
+						}
+					} catch (error: any) {
+						// Handle individual function call error
 						aggregatedResults.push({
 							name: call.name,
-							response: { folders: foldersArray },
-						});
-					} else if (call.name === "getAllLists") {
-						const listsArray = await getAllLists(call.args);
-						aggregatedResults.push({
-							name: call.name,
-							response: { lists: listsArray },
-						});
-					} else if (call.name === "getAllItems") {
-						const itemsArray = await getAllListItems(call.args);
-						aggregatedResults.push({
-							name: call.name,
-							response: { items: itemsArray },
+							response: { error: error.message },
 						});
 					}
-				} catch (error) {
-					// Handle individual function call error
-					aggregatedResults.push({
-						name: call.name,
-						response: { error: error.message },
-					});
 				}
+				console.log(aggregatedResults);
+				// Send all aggregated function responses to the model.
+				result = await chat.sendMessage(
+					aggregatedResults.map((fnResult) => ({
+						functionResponse: {
+							name: fnResult.name,
+							response: fnResult.response,
+						},
+					})),
+				);
+			} else {
+				// Fallback: resend the original user prompt if no function calls are present.
+				result = await chat.sendMessage(userPrompt);
 			}
-			console.log(aggregatedResults);
-			// Send all aggregated function responses to the model.
-			result = await chat.sendMessage(
-				aggregatedResults.map((fnResult) => ({
-					functionResponse: {
-						name: fnResult.name,
-						response: fnResult.response,
-					},
-				})),
-			);
-		} else {
-			// Fallback: resend the original user prompt if no function calls are present.
-			result = await chat.sendMessage(userPrompt);
+
+			// Update loading UI: Replace loading indicator with actual response.
+			const aiResponse = result.response.text();
+			console.log(aiResponse);
+			setChatHistory((prev) => {
+				// Remove the temporary loading indicator if present.
+				let updated = [...prev];
+				if (
+					updated.length > 0 &&
+					updated[updated.length - 1].text === "Loading..."
+				) {
+					updated.pop();
+				}
+				return [...updated, { role: "model", text: aiResponse }];
+			});
+		} catch (error) {
+			console.error("Error during chat:", error);
+			alert("There was an error processing your request.");
+			setChatHistory((prev) => {
+				// Remove the last message from chat history.
+				const newHistory = [...prev];
+				newHistory.pop();
+				return newHistory;
+			});
+		} finally {
+			setIsLoading(false);
+			setUserPrompt("");
 		}
-
-		// Immediately add a loading indicator to the chat history.
-		setChatHistory((prev) => [
-			...prev,
-			{ role: "model", text: "Loading..." },
-		]);
-
-		// Accumulate the streaming response.
-		const aiResponse = result.response.text();
-
-		// Once the stream is complete, update the chat history with the final response.
-		setChatHistory((prev) => {
-			const updated = [...prev];
-			updated[updated.length - 1] = { role: "model", text: aiResponse };
-			return updated;
-		});
-		setUserPrompt("");
 	};
 
 	// Optional handlers to clear history or start a new chat.
@@ -121,8 +158,6 @@ const ChatUI: React.FC = () => {
 	useEffect(() => {
 		onAuthStateChanged(auth, (user) => {
 			if (user) {
-				// User is signed in, see docs for a list of available properties
-				// https://firebase.google.com/docs/reference/js/auth.user
 				console.log(user.uid);
 				setUserId(user.uid);
 				setIsLoggedIn(true);
@@ -137,8 +172,6 @@ const ChatUI: React.FC = () => {
 					},
 				]);
 			} else {
-				// User is signed out
-				// ...
 				setIsLoggedIn(false);
 			}
 		});
@@ -175,16 +208,12 @@ const ChatUI: React.FC = () => {
 						aria-label="Close"
 					></button>
 				</div>
-				{/* The offcanvas body uses a flex-column layout */}
 				<div className="offcanvas-body d-flex flex-column">
-					{/* Chat history container that scrolls if necessary */}
 					<div className="chat-content flex-grow-1 overflow-auto mb-2">
 						{chatHistory.map((msg, idx) => (
 							<div
 								key={idx}
-								className={`mb-2 text-${
-									msg.role === "user" ? "end" : "start"
-								}`}
+								className={`mb-2 text-${msg.role === "user" ? "end" : "start"}`}
 							>
 								<span
 									className={`badge bg-${
@@ -198,8 +227,16 @@ const ChatUI: React.FC = () => {
 								<span>{msg.text}</span>
 							</div>
 						))}
+						{/* Loading indicator */}
+						{isLoading && (
+							<div className="mb-2 text-start">
+								<span className="badge bg-secondary me-2">
+									Kian
+								</span>
+								<span>Loading...</span>
+							</div>
+						)}
 					</div>
-					{/* Input area sticks at the bottom */}
 					<form
 						className="input-group mt-auto"
 						onSubmit={handleSubmit}
@@ -211,9 +248,10 @@ const ChatUI: React.FC = () => {
 							className="form-control"
 							aria-label="Chat input"
 							placeholder="Chat history won't be saved"
+							disabled={isLoading} // disable input while waiting
 						/>
 						<button
-							disabled={!isLoggedIn}
+							disabled={!isLoggedIn || isLoading}
 							type="submit"
 							className="btn btn-outline-secondary"
 						>
