@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { model, auth } from "../config/firebase";
+import { auth } from "../config/firebase";
 import { onAuthStateChanged } from "firebase/auth";
+import { httpsCallable, getFunctions } from "firebase/functions";
+
 import {
 	getAllFolders,
 	getAllLists,
@@ -24,13 +26,6 @@ const ChatUI: React.FC = () => {
 		e.preventDefault();
 		const now = Date.now();
 
-		// 1. Throttle: ensure 30 seconds between requests.
-		// if (now - lastRequestTime < 30000) {
-		// 	alert("Please wait 30 seconds between requests.");
-		// 	return;
-		// }
-
-		// 2. Prevent sending another user message if waiting for response.
 		if (
 			chatHistory.length > 0 &&
 			chatHistory[chatHistory.length - 1].role === "user"
@@ -54,71 +49,16 @@ const ChatUI: React.FC = () => {
 		];
 		setChatHistory(newChatHistory);
 
-		// Initialize the chat with the current history.
-		const chat = model.startChat({
-			history: newChatHistory.map((msg) => ({
-				role: msg.role,
-				parts: [{ text: msg.text }],
-			})),
-			generationConfig: {
-				maxOutputTokens: 300,
-			},
-		});
+		const summarizeData = httpsCallable(getFunctions(), "summarizeData");
 
 		try {
 			// Send the user's question (the prompt) to the model using multi-turn chat.
-			let result = await chat.sendMessage(userPrompt);
-			const functionCalls = result.response.functionCalls();
-
-			if (functionCalls && functionCalls.length > 0) {
-				const aggregatedResults: any[] = [];
-
-				for (const call of functionCalls) {
-					try {
-						if (call.name === "getAllFolders") {
-							const foldersArray = await getAllFolders(call.args);
-							aggregatedResults.push({
-								name: call.name,
-								response: { folders: foldersArray },
-							});
-						} else if (call.name === "getAllLists") {
-							const listsArray = await getAllLists(call.args);
-							aggregatedResults.push({
-								name: call.name,
-								response: { lists: listsArray },
-							});
-						} else if (call.name === "getAllItems") {
-							const itemsArray = await getAllListItems(call.args);
-							aggregatedResults.push({
-								name: call.name,
-								response: { items: itemsArray },
-							});
-						}
-					} catch (error: any) {
-						// Handle individual function call error
-						aggregatedResults.push({
-							name: call.name,
-							response: { error: error.message },
-						});
-					}
-				}
-				console.log(aggregatedResults);
-				// Send all aggregated function responses to the model.
-				result = await chat.sendMessage(
-					aggregatedResults.map((fnResult) => ({
-						functionResponse: {
-							name: fnResult.name,
-							response: fnResult.response,
-						},
-					})),
-				);
-			} else {
-				// Fallback: resend the original user prompt if no function calls are present.
-				result = await chat.sendMessage(userPrompt);
-			}
+			const response = await summarizeData({
+				prompt: userPrompt,
+			});
 
 			// Update loading UI: Replace loading indicator with actual response.
-			const aiResponse = result.response.text();
+			const aiResponse = response.data;
 			console.log(aiResponse);
 			setChatHistory((prev) => {
 				// Remove the temporary loading indicator if present.

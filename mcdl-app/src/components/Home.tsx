@@ -398,7 +398,6 @@ const Home: React.FC = () => {
 	const onTestClick = async () => {
 		try {
 			const testPrompt = httpsCallable(getFunctions(), "summarizeData");
-			console.log("testPrompt:", testPrompt);
 			const response = await testPrompt({
 				prompt: "Tell me about yourself!",
 			});
@@ -681,7 +680,11 @@ const Home: React.FC = () => {
 					</div>
 				</div>
 			</div>
-			<button className="btn btn-danger" onClick={() => onTestClick()}>
+			<button
+				disabled={true}
+				className="btn btn-danger"
+				onClick={() => onTestClick()}
+			>
 				Click Me to Test Query API
 			</button>
 		</>
