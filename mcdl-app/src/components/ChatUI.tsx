@@ -15,7 +15,7 @@ interface ChatMessage {
 }
 
 const ChatUI: React.FC = () => {
-	const [userId, setUserId] = useState<string | null>(null);
+	const [currentUser, setCurrentUser] = useState<string | null>(null);
 	const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 	const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
 	const [userPrompt, setUserPrompt] = useState("");
@@ -53,9 +53,18 @@ const ChatUI: React.FC = () => {
 
 		try {
 			// Send the user's question (the prompt) to the model using multi-turn chat.
-			const response = await summarizeData({
-				prompt: userPrompt,
-			});
+			const response = await summarizeData(
+				{
+					prompt: userPrompt,
+				},
+				{
+					context: {
+						auth: {
+							uid: currentUser.uid,
+						},
+					},
+				},
+			);
 
 			// Update loading UI: Replace loading indicator with actual response.
 			const aiResponse = response.data;
@@ -98,8 +107,7 @@ const ChatUI: React.FC = () => {
 	useEffect(() => {
 		onAuthStateChanged(auth, (user) => {
 			if (user) {
-				console.log(user.uid);
-				setUserId(user.uid);
+				setCurrentUser(user);
 				setIsLoggedIn(true);
 				setChatHistory([
 					{
