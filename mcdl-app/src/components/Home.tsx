@@ -13,7 +13,6 @@ import { httpsCallable, getFunctions } from "firebase/functions";
 import FolderButton from "./FolderButton.tsx";
 import ListButton from "./ListButton";
 import ListItemButton from "./ListItemButton";
-import { getAllListItems } from "../utils/getUserData.ts";
 
 interface Folder {
 	id: string;

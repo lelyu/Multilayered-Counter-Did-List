@@ -3,12 +3,6 @@ import { auth } from "../config/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { httpsCallable, getFunctions } from "firebase/functions";
 
-import {
-	getAllFolders,
-	getAllLists,
-	getAllListItems,
-} from "../utils/getUserData.ts";
-
 interface ChatMessage {
 	role: "user" | "model";
 	text: string;
@@ -20,11 +14,9 @@ const ChatUI: React.FC = () => {
 	const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
 	const [userPrompt, setUserPrompt] = useState("");
 	const [isLoading, setIsLoading] = useState(false);
-	const [lastRequestTime, setLastRequestTime] = useState<number>(0);
 
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
-		const now = Date.now();
 
 		if (
 			chatHistory.length > 0 &&
@@ -40,7 +32,6 @@ const ChatUI: React.FC = () => {
 
 		// Set loading and record the time
 		setIsLoading(true);
-		setLastRequestTime(now);
 
 		// Add the user's message to the chat history.
 		const newChatHistory = [
