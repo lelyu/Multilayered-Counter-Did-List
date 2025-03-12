@@ -99,16 +99,7 @@ const ChatUI: React.FC = () => {
 			if (user) {
 				setCurrentUser(user);
 				setIsLoggedIn(true);
-				setChatHistory([
-					{
-						role: "user",
-						text: `Hello, my userId is ${user.uid}`,
-					},
-					{
-						role: "model",
-						text: "Great to meet you. What would you like to know?",
-					},
-				]);
+				setChatHistory([]);
 			} else {
 				setIsLoggedIn(false);
 			}
