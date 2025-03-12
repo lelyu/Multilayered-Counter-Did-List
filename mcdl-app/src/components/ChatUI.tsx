@@ -68,7 +68,6 @@ const ChatUI: React.FC = () => {
 
 			// Update loading UI: Replace loading indicator with actual response.
 			const aiResponse = response.data;
-			console.log(aiResponse);
 			setChatHistory((prev) => {
 				// Remove the temporary loading indicator if present.
 				let updated = [...prev];
