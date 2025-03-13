@@ -1,11 +1,14 @@
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import React, { useState, useEffect } from "react";
-import { auth } from "../config/firebase";
+import { auth, payments } from "../config/firebase";
+import {
+	createCheckoutSession,
+	onCurrentUserSubscriptionUpdate,
+} from "@invertase/firestore-stripe-payments";
 
 const Navbar: React.FC = () => {
 	const [user, setUser] = useState(null);
 	const [loading, setLoading] = useState(true); // loading state
-
 	useEffect(() => {
 		const unsubscribe = onAuthStateChanged(auth, (user) => {
 			if (user) {
@@ -68,7 +71,43 @@ const Navbar: React.FC = () => {
 						className="collapse navbar-collapse"
 						id="navbarSupportedContent"
 					>
+						{/* Left-aligned items */}
 						<ul className="navbar-nav me-auto mb-2 mb-lg-0">
+							<li className="nav-item dropdown">
+								<a
+									className="nav-link dropdown-toggle"
+									href="#"
+									role="button"
+									data-bs-toggle="dropdown"
+									aria-expanded="false"
+								>
+									Other Apps
+								</a>
+								<ul className="dropdown-menu">
+									<li>
+										<a className="dropdown-item" href="#">
+											Daily Mood Tracker
+										</a>
+									</li>
+									<li>
+										<a className="dropdown-item" href="#">
+											iPortfolio
+										</a>
+									</li>
+									<li>
+										<hr className="dropdown-divider" />
+									</li>
+									<li>
+										<a className="dropdown-item" href="#">
+											Personal Website
+										</a>
+									</li>
+								</ul>
+							</li>
+						</ul>
+
+						{/* Right-aligned items */}
+						<ul className="navbar-nav ms-auto mb-2 mb-lg-0">
 							{user ? (
 								<>
 									<li className="nav-item">
@@ -80,9 +119,9 @@ const Navbar: React.FC = () => {
 										</button>
 									</li>
 									<li className="nav-item">
-										<a className="nav-link">
+										<span className="nav-link">
 											Welcome, {user.email}
-										</a>
+										</span>
 									</li>
 								</>
 							) : (
@@ -106,54 +145,7 @@ const Navbar: React.FC = () => {
 									</li>
 								</>
 							)}
-
-							<li className="nav-item dropdown">
-								<a
-									className="nav-link dropdown-toggle"
-									href="#"
-									role="button"
-									data-bs-toggle="dropdown"
-									aria-expanded="false"
-								>
-									Other Apps
-								</a>
-								<ul className="dropdown-menu">
-									<li>
-										<a className="dropdown-item" href="#">
-											Daily Mood Tracker
-										</a>
-									</li>
-									<li>
-										<a className="dropdown-item" href="#">
-											iPortfolio
-										</a>
-										`
-									</li>
-									<li>
-										<hr className="dropdown-divider" />
-									</li>
-									<li>
-										<a className="dropdown-item" href="#">
-											Personal Website
-										</a>
-									</li>
-								</ul>
-							</li>
 						</ul>
-						<form className="d-flex" role="search">
-							<input
-								className="form-control me-2"
-								type="search"
-								placeholder="Search"
-								aria-label="Search"
-							/>
-							<button
-								className="btn btn-outline-success"
-								type="submit"
-							>
-								Search
-							</button>
-						</form>
 					</div>
 				</div>
 			</nav>

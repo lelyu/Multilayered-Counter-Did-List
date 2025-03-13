@@ -10,8 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@invertase/firestore-stripe-payments": "^0.0.7",
     "bootstrap-icons": "^1.11.3",
     "firebase": "^11.3.1",
+    "firestore-stripe-payments": "^0.0.1-security",
     "framer-motion": "^12.4.7",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
