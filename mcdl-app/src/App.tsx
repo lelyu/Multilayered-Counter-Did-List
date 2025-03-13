@@ -8,6 +8,7 @@ import Login from "./components/Login.tsx";
 import "./App.css";
 import ChatUI from "./components/ChatUI.tsx";
 import LandingPage from "./components/LandingPage.tsx";
+import ProSubscriptionPage from "./components/ProSubscriptionPage.tsx";
 
 const App: React.FC = () => {
 	return (
@@ -20,6 +21,10 @@ const App: React.FC = () => {
 					<Route path="/register" element={<Register />} />
 					<Route path="/login" element={<Login />} />
 					<Route path="/chat" element={<ChatUI />} />
+					<Route
+						path="/subscribe"
+						element={<ProSubscriptionPage />}
+					/>
 				</Routes>
 				<ChatUI />
 				<Footer />

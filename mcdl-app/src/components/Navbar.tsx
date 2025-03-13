@@ -82,6 +82,11 @@ const Navbar: React.FC = () => {
 
 						{/* Right-aligned */}
 						<ul className="navbar-nav ms-auto mb-2 mb-lg-0">
+							<li className="nav-item">
+								<a href="/subscribe" className="nav-link">
+									PRO
+								</a>
+							</li>
 							{user ? (
 								<>
 									<li className="nav-item">
