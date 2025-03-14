@@ -2,6 +2,7 @@ import { auth, db } from "../config/firebase";
 import {
 	createUserWithEmailAndPassword,
 	validatePassword,
+	sendEmailVerification,
 } from "firebase/auth";
 import { setDoc, doc } from "firebase/firestore";
 import React, { useState } from "react";
@@ -65,6 +66,11 @@ const Register: React.FC = () => {
 				password,
 			);
 			const user = userCredential.user;
+
+			alert(
+				"A verification email has been sent. Please check your inbox.",
+			);
+			await sendEmailVerification(user);
 
 			// Create a user document in Firestore
 			await setDoc(doc(db, "users", user.uid), {
