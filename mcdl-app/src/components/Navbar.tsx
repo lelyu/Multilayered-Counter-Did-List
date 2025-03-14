@@ -53,7 +53,7 @@ const Navbar: React.FC = () => {
 		<>
 			<nav className="navbar navbar-expand-lg bg-body-tertiary">
 				<div className="container-fluid">
-					<a className="navbar-brand" href="/">
+					<a className="navbar-brand btn btn-light" href="/">
 						DocIt
 					</a>
 					<button
@@ -74,7 +74,10 @@ const Navbar: React.FC = () => {
 						{/* Left-aligned */}
 						<ul className="navbar-nav me-auto mb-2 mb-lg-0">
 							<li className="nav-item">
-								<a href="/home" className="nav-link">
+								<a
+									href="/home"
+									className="nav-link btn btn-light"
+								>
 									My Docs
 								</a>
 							</li>
@@ -85,7 +88,7 @@ const Navbar: React.FC = () => {
 							<li className="nav-item">
 								<a
 									href="/subscribe"
-									className="nav-link active"
+									className="nav-link btn btn-light"
 								>
 									PRO
 								</a>
@@ -95,22 +98,25 @@ const Navbar: React.FC = () => {
 									<li className="nav-item">
 										<button
 											onClick={logout}
-											className="nav-link"
+											className="nav-link btn btn-light"
 										>
 											Logout
 										</button>
 									</li>
 									<li className="nav-item">
-										<span className="nav-link">
+										<a
+											href="/dashboard"
+											className="nav-link btn btn-light"
+										>
 											Welcome, {user.email}
-										</span>
+										</a>
 									</li>
 								</>
 							) : (
 								<>
 									<li className="nav-item">
 										<a
-											className="nav-link"
+											className="nav-link btn btn-light"
 											aria-current="page"
 											href="/login"
 										>
@@ -119,7 +125,7 @@ const Navbar: React.FC = () => {
 									</li>
 									<li className="nav-item">
 										<a
-											className="nav-link"
+											className="nav-link btn btn-light"
 											href="/register"
 										>
 											Register
