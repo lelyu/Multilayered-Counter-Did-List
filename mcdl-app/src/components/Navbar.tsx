@@ -83,7 +83,10 @@ const Navbar: React.FC = () => {
 						{/* Right-aligned */}
 						<ul className="navbar-nav ms-auto mb-2 mb-lg-0">
 							<li className="nav-item">
-								<a href="/subscribe" className="nav-link">
+								<a
+									href="/subscribe"
+									className="nav-link active"
+								>
 									PRO
 								</a>
 							</li>
@@ -107,7 +110,7 @@ const Navbar: React.FC = () => {
 								<>
 									<li className="nav-item">
 										<a
-											className="nav-link active"
+											className="nav-link"
 											aria-current="page"
 											href="/login"
 										>

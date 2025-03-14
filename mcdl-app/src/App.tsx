@@ -9,6 +9,7 @@ import "./App.css";
 import ChatUI from "./components/ChatUI.tsx";
 import LandingPage from "./components/LandingPage.tsx";
 import ProSubscriptionPage from "./components/ProSubscriptionPage.tsx";
+import Dashboard from "./components/Dashboard.tsx";
 
 const App: React.FC = () => {
 	return (
@@ -25,6 +26,7 @@ const App: React.FC = () => {
 						path="/subscribe"
 						element={<ProSubscriptionPage />}
 					/>
+					<Route path="/dashboard" element={<Dashboard />} />
 				</Routes>
 				<ChatUI />
 				<Footer />

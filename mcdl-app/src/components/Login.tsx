@@ -14,17 +14,13 @@ const Login: React.FC = () => {
 	const [email, setEmail] = useState<string>("");
 	const [password, setPassword] = useState<string>("");
 	const provider = new GoogleAuthProvider();
-	const auth = getAuth();
 
 	const login = (event: React.MouseEvent<HTMLButtonElement>) => {
 		event.preventDefault();
 		signInWithEmailAndPassword(auth, email, password)
 			.then((userCredential) => {
-				// Signed in
 				const user = userCredential.user;
-				console.log(user);
 				window.location.href = "/";
-				// ...
 			})
 			.catch((error) => {
 				const errorCode = error.code;

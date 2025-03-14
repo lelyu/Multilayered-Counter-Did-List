@@ -95,7 +95,7 @@ const ChatUI: React.FC = () => {
 	};
 
 	useEffect(() => {
-		onAuthStateChanged(auth, (user) => {
+		const unsubscribe = onAuthStateChanged(auth, (user) => {
 			if (user) {
 				setCurrentUser(user);
 				setIsLoggedIn(true);
@@ -104,6 +104,7 @@ const ChatUI: React.FC = () => {
 				setIsLoggedIn(false);
 			}
 		});
+		return () => unsubscribe();
 	}, []);
 
 	return (

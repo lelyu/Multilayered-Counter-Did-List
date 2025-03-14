@@ -1,12 +1,9 @@
 import { auth, db } from "../config/firebase";
-import { createUserWithEmailAndPassword } from "firebase/auth";
 import {
-	addDoc,
-	setDoc,
-	collection,
-	serverTimestamp,
-	doc,
-} from "firebase/firestore";
+	createUserWithEmailAndPassword,
+	validatePassword,
+} from "firebase/auth";
+import { setDoc, doc } from "firebase/firestore";
 import React, { useState } from "react";
 
 const Register: React.FC = () => {
@@ -15,6 +12,7 @@ const Register: React.FC = () => {
 	const [confirmedPassword, setConfirmedPassword] = useState<string>("");
 	const [firstName, setFirstName] = useState<string>("");
 	const [lastName, setLastName] = useState<string>("");
+	const [validated, setValidated] = useState<boolean>(false);
 
 	const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		setEmail(e.target.value);
@@ -25,18 +23,41 @@ const Register: React.FC = () => {
 	};
 
 	const register = async (
-		event: React.MouseEvent<HTMLButtonElement>,
+		event: React.FormEvent<HTMLFormElement>,
 	): Promise<void> => {
 		event.preventDefault();
+		const form = event.currentTarget;
+		setValidated(true);
 
+		// Check client-side validation using Bootstrap's form validation
+		if (form.checkValidity() === false) {
+			event.stopPropagation();
+			return;
+		}
+
+		// Ensure passwords match
 		if (password !== confirmedPassword) {
 			alert("Passwords do not match");
-			setConfirmedPassword("");
 			setPassword("");
+			setConfirmedPassword("");
 			return;
 		}
 
 		try {
+			// Server-side password validation using Firebase
+			const status = await validatePassword(auth, password);
+			if (!status.isValid) {
+				const needsLowerCase = status.containsLowercaseLetter;
+				const needsUpperCase = status.containsUppercaseLetter;
+				const needsSpecialChar =
+					status.containsNonAlphanumericCharacter;
+				const needsNumber = status.containsNumericCharacter;
+				alert(
+					`Password is not strong enough\nConsider the following Criteria:\nHas Lower Case: ${needsLowerCase}\nHas Upper Case: ${needsUpperCase}\nHas Special Character: ${needsSpecialChar}\nHas Number: ${needsNumber}\nLength >=8: ${password.length >= 8}`,
+				);
+				return;
+			}
+
 			// Create the user with email and password
 			const userCredential = await createUserWithEmailAndPassword(
 				auth,
@@ -45,14 +66,15 @@ const Register: React.FC = () => {
 			);
 			const user = userCredential.user;
 
-			// Create a user document in the "users" collection
+			// Create a user document in Firestore
 			await setDoc(doc(db, "users", user.uid), {
 				userId: user.uid,
 				firstName: firstName,
 				lastName: lastName,
 				email: email,
 			});
-			// Redirect after document creation is complete
+
+			// Redirect after successful registration
 			window.location.href = "/";
 		} catch (error) {
 			console.error("Error during registration:", error);
@@ -62,7 +84,11 @@ const Register: React.FC = () => {
 	return (
 		<>
 			<h1>Register</h1>
-			<form>
+			<form
+				className={`needs-validation ${validated ? "was-validated" : ""}`}
+				noValidate
+				onSubmit={register}
+			>
 				<div className="mb-3">
 					<label htmlFor="firstName" className="form-label">
 						First Name
@@ -73,7 +99,11 @@ const Register: React.FC = () => {
 						type="text"
 						className="form-control"
 						id="firstName"
+						required
 					/>
+					<div className="invalid-feedback">
+						Please provide a first name.
+					</div>
 				</div>
 				<div className="mb-3">
 					<label htmlFor="lastName" className="form-label">
@@ -85,7 +115,11 @@ const Register: React.FC = () => {
 						type="text"
 						className="form-control"
 						id="lastName"
+						required
 					/>
+					<div className="invalid-feedback">
+						Please provide a last name.
+					</div>
 				</div>
 				<div className="mb-3">
 					<label htmlFor="exampleInputEmail1" className="form-label">
@@ -98,9 +132,10 @@ const Register: React.FC = () => {
 						className="form-control"
 						id="exampleInputEmail1"
 						aria-describedby="emailHelp"
+						required
 					/>
-					<div id="emailHelp" className="form-text">
-						We'll never share your email with anyone else.
+					<div className="invalid-feedback">
+						Please provide an email address.
 					</div>
 				</div>
 				<div className="mb-3">
@@ -116,11 +151,15 @@ const Register: React.FC = () => {
 						type="password"
 						className="form-control"
 						id="exampleInputPassword1"
+						required
 					/>
+					<div className="invalid-feedback">
+						Please provide a strong password.
+					</div>
 				</div>
 				<div className="mb-3">
 					<label
-						htmlFor="exampleInputPassword1"
+						htmlFor="exampleInputPassword2"
 						className="form-label"
 					>
 						Confirm Password
@@ -130,24 +169,28 @@ const Register: React.FC = () => {
 						onChange={(e) => setConfirmedPassword(e.target.value)}
 						type="password"
 						className="form-control"
-						id="exampleInputPassword1"
+						id="exampleInputPassword2"
+						required
 					/>
+					<div className="invalid-feedback">
+						Please confirm your password.
+					</div>
 				</div>
 				<div className="mb-3 form-check">
 					<input
 						type="checkbox"
 						className="form-check-input"
 						id="exampleCheck1"
+						required
 					/>
 					<label className="form-check-label" htmlFor="exampleCheck1">
-						Check me out
+						Agree to terms and conditions
 					</label>
+					<div className="invalid-feedback">
+						You must agree before submitting.
+					</div>
 				</div>
-				<button
-					onClick={register}
-					type="submit"
-					className="btn btn-light"
-				>
+				<button type="submit" className="btn btn-light">
 					Register
 				</button>
 			</form>
