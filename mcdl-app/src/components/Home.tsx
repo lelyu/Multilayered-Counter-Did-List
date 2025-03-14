@@ -425,6 +425,9 @@ const Home: React.FC = () => {
 					</button>
 				)}
 				{user === null && <h3>You need to login to use this app.</h3>}
+				{!user?.emailVerified && (
+					<h3>You need verify your account to use this app.</h3>
+				)}
 				<div className="row align-items-start">
 					<div className="col">
 						<h1>My Folders</h1>
