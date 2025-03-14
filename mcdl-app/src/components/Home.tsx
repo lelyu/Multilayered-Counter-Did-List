@@ -428,8 +428,8 @@ const Home: React.FC = () => {
 				{!user?.emailVerified && (
 					<h3>You need verify your account to use this app.</h3>
 				)}
-				<div className="row align-items-start">
-					<div className="col">
+				<div className="row align-items-start column-gap-3">
+					<div className="col shadow p-3 mb-5 bg-body-tertiary rounded">
 						<h3>My Folders</h3>
 						<div className="input-group mb-3">
 							<span
@@ -492,7 +492,7 @@ const Home: React.FC = () => {
 						</div>
 					</div>
 
-					<div className="col-6">
+					<div className="col-6 shadow p-3 mb-5 bg-body-tertiary rounded">
 						<h3>My Items</h3>
 						<div>
 							<div className="input-group mb-3">
@@ -611,7 +611,7 @@ const Home: React.FC = () => {
 						</div>
 					</div>
 
-					<div className="col">
+					<div className="col shadow p-3 mb-5 bg-body-tertiary rounded">
 						<h3>My Lists</h3>
 						<div className="input-group mb-3">
 							<span
