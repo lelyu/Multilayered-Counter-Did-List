@@ -13,6 +13,7 @@ import { httpsCallable, getFunctions } from "firebase/functions";
 import FolderButton from "./FolderButton.tsx";
 import ListButton from "./ListButton";
 import ListItemButton from "./ListItemButton";
+import ChatUI from "./ChatUI.tsx";
 
 interface Folder {
 	id: string;
@@ -178,6 +179,9 @@ const Home: React.FC = () => {
 					createdBy: userId,
 					name: listName,
 					dateCreated: serverTimestamp(),
+					parent: {
+						parentFolder: folderId,
+					},
 				},
 			);
 			await getLists(userId, folderId);
@@ -296,6 +300,7 @@ const Home: React.FC = () => {
 					name: itemName,
 					dateCreated: serverTimestamp(),
 					count: count,
+					parent: { parentFolder: folderId, parentList: listId },
 				},
 			);
 			await getListItems(userId, folderId, listId);
@@ -679,13 +684,7 @@ const Home: React.FC = () => {
 					</div>
 				</div>
 			</div>
-			<button
-				disabled={true}
-				className="btn btn-danger"
-				onClick={() => onTestClick()}
-			>
-				Click Me to Test Query API
-			</button>
+			<ChatUI />
 		</>
 	);
 };
