@@ -413,8 +413,8 @@ const Home: React.FC = () => {
 
 	return (
 		<>
-			<div className="container text-center">
-				{user === null && <h1>Welcome to DocIt.</h1>}
+			<div className="container-fluid">
+				{user === null && <h3>Welcome to DocIt.</h3>}
 				{loading && (
 					<button className="btn btn-primary" type="button" disabled>
 						<span
@@ -430,7 +430,7 @@ const Home: React.FC = () => {
 				)}
 				<div className="row align-items-start">
 					<div className="col">
-						<h1>My Folders</h1>
+						<h3>My Folders</h3>
 						<div className="input-group mb-3">
 							<span
 								className="input-group-text"
@@ -492,8 +492,8 @@ const Home: React.FC = () => {
 						</div>
 					</div>
 
-					<div className="col">
-						<h1>My Items</h1>
+					<div className="col-6">
+						<h3>My Items</h3>
 						<div>
 							<div className="input-group mb-3">
 								<span
@@ -612,7 +612,7 @@ const Home: React.FC = () => {
 					</div>
 
 					<div className="col">
-						<h1>My Lists</h1>
+						<h3>My Lists</h3>
 						<div className="input-group mb-3">
 							<span
 								className="input-group-text"
