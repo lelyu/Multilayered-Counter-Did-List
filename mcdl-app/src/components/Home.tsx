@@ -353,14 +353,6 @@ const Home: React.FC = () => {
 		}
 	};
 
-	const onCounterClick = (isPlus: boolean): void => {
-		if (isPlus) {
-			setCount((count) => count + 1);
-		} else {
-			setCount((count) => count - 1);
-		}
-	};
-
 	// fetch and set user object
 	useEffect(() => {
 		const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -432,12 +424,16 @@ const Home: React.FC = () => {
 					<div className="col shadow p-3 mb-5 bg-body-tertiary rounded">
 						<h3>My Folders</h3>
 						<div className="input-group mb-3">
-							<span
-								className="input-group-text"
+							<button
+								disabled={user === null}
+								className="input-group-text btn btn-light"
 								id="inputGroup-sizing-default"
+								onClick={() =>
+									createFolder(user.uid, currentFolder)
+								}
 							>
-								Add a new folder:
-							</span>
+								New Folder
+							</button>
 							<input
 								value={currentFolder}
 								onChange={(e) =>
@@ -449,16 +445,6 @@ const Home: React.FC = () => {
 								aria-describedby="inputGroup-sizing-default"
 							/>
 						</div>
-						<button
-							disabled={user === null}
-							type="button"
-							className="btn btn-light"
-							onClick={() =>
-								createFolder(user.uid, currentFolder)
-							}
-						>
-							Create New Folder
-						</button>
 
 						<div
 							className="btn-group-vertical container"
@@ -496,12 +482,22 @@ const Home: React.FC = () => {
 						<h3>My Items</h3>
 						<div>
 							<div className="input-group mb-3">
-								<span
-									className="input-group-text"
+								<button
+									className="input-group-text btn btn-light"
 									id="inputGroup-sizing-default"
+									disabled={user === null}
+									onClick={() =>
+										createItem(
+											user.uid,
+											selectedFolder,
+											selectedList,
+											itemName,
+											count,
+										)
+									}
 								>
-									Add a new item
-								</span>
+									New Item
+								</button>
 								<input
 									type="text"
 									className="form-control"
@@ -529,21 +525,6 @@ const Home: React.FC = () => {
 									}
 								/>
 							</div>
-							<button
-								disabled={user === null}
-								onClick={() =>
-									createItem(
-										user.uid,
-										selectedFolder,
-										selectedList,
-										itemName,
-										count,
-									)
-								}
-								className="btn btn-light"
-							>
-								Create new item
-							</button>
 
 							<div
 								className="btn-group-vertical container"
@@ -593,33 +574,26 @@ const Home: React.FC = () => {
 									/>
 								))}
 							</div>
-							<button
-								type="button"
-								className="btn btn-light"
-								onClick={() => onCounterClick(true)}
-							>
-								+
-							</button>
-							<button
-								type="button"
-								className="btn btn-light"
-								onClick={() => onCounterClick(false)}
-							>
-								-
-							</button>
-							<p>Count: {count}</p>
 						</div>
 					</div>
 
 					<div className="col shadow p-3 mb-5 bg-body-tertiary rounded">
 						<h3>My Lists</h3>
 						<div className="input-group mb-3">
-							<span
-								className="input-group-text"
+							<button
+								className="input-group-text btn btn-light"
 								id="inputGroup-sizing-default"
+								disabled={user === null}
+								onClick={() =>
+									createList(
+										user.uid,
+										selectedFolder,
+										currentList,
+									)
+								}
 							>
-								Add a new list:
-							</span>
+								New List
+							</button>
 							<input
 								value={currentList}
 								onChange={(e) => setCurrentList(e.target.value)}
@@ -629,20 +603,6 @@ const Home: React.FC = () => {
 								aria-describedby="inputGroup-sizing-default"
 							/>
 						</div>
-						<button
-							disabled={user === null}
-							type="button"
-							className="btn btn-light"
-							onClick={() =>
-								createList(
-									user.uid,
-									selectedFolder,
-									currentList,
-								)
-							}
-						>
-							Create New List
-						</button>
 
 						<div
 							className="btn-group-vertical container"
