@@ -189,11 +189,6 @@ const ListButton: React.FC<ListButtonProps> = ({
 						</a>
 					</li>
 					<li>
-						<a className="dropdown-item" href="#">
-							Something else here
-						</a>
-					</li>
-					<li>
 						<hr className="dropdown-divider" />
 					</li>
 					<li>
