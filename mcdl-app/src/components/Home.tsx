@@ -47,6 +47,7 @@ const Home: React.FC = () => {
 	const [count, setCount] = useState<number>(0); // bound with current item
 	const [currListItems, setCurrListItems] = useState<Item[]>([]); // list of items under currently selected list
 	const [selectedListItem, setSelectedListItem] = useState<string>(""); // id of the item. used for setting initial data and button click
+	const [itemDescription, setItemDescription] = useState<string>("");
 
 	// list related attributes
 	const [selectedList, setSelectedList] = useState<string>(""); // id of the list. used for setting initial data and button click
@@ -272,6 +273,7 @@ const Home: React.FC = () => {
 		listId: string,
 		itemName: string,
 		count: number,
+		description: string,
 	) => {
 		if (!userId) {
 			alert("You are not logged in");
@@ -303,10 +305,12 @@ const Home: React.FC = () => {
 					dateCreated: serverTimestamp(),
 					count: count,
 					parent: { parentFolder: folderId, parentList: listId },
+					description: description,
 				},
 			);
 			await getListItems(userId, folderId, listId);
 			setItemName("");
+			setItemDescription("");
 			return itemRef.id;
 		} catch (error) {
 			console.error("Error creating item:", error);
@@ -495,6 +499,7 @@ const Home: React.FC = () => {
 											selectedList,
 											itemName,
 											count,
+											itemDescription,
 										)
 									}
 								>
@@ -526,6 +531,41 @@ const Home: React.FC = () => {
 										setCount(Number(e.target.value))
 									}
 								/>
+							</div>
+
+							{/* add a description for the list item*/}
+							<div className="container mt-3 mb-3">
+								{/* Button to toggle the collapse */}
+								<button
+									className="btn btn-secondary"
+									type="button"
+									data-bs-toggle="collapse"
+									data-bs-target="#collapseTextarea"
+									aria-expanded="false"
+									aria-controls="collapseTextarea"
+								>
+									Add a description
+								</button>
+
+								{/* Collapsible container with the textarea */}
+								<div
+									className="collapse mt-3 form-floating"
+									id="collapseTextarea"
+								>
+									<textarea
+										className="form-control"
+										rows={5}
+										id="floatingTextarea"
+										placeholder="Add a description here"
+										value={itemDescription}
+										onChange={(e) =>
+											setItemDescription(e.target.value)
+										}
+									></textarea>
+									<label htmlFor="floatingTextarea">
+										Description
+									</label>
+								</div>
 							</div>
 
 							<div
