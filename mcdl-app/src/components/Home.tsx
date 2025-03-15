@@ -138,7 +138,9 @@ const Home: React.FC = () => {
 						id: doc.id,
 						name: doc.data().name,
 						dateCreated: doc.data().dateCreated.toDate(),
-						description: doc.data().description,
+						description: doc.data().description
+							? doc.data().description
+							: "",
 					};
 				});
 				setCurrLists(lists);
@@ -559,6 +561,7 @@ const Home: React.FC = () => {
 										listId={selectedList}
 										listItemId={item.id}
 										listItemName={item.name}
+										dateCreated={item.dateCreated}
 										isSelected={
 											item.id === selectedListItem
 										}
