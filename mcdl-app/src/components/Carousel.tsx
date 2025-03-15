@@ -1,6 +1,5 @@
-import img4 from "../assets/img4.webp";
-import img5 from "../assets/img5.webp";
-import img6 from "../assets/img6.webp";
+import img4 from "../assets/docit2.webp";
+import img5 from "../assets/docit3.webp";
 
 const Carousel = () => {
 	return (
@@ -20,53 +19,27 @@ const Carousel = () => {
 					data-bs-slide-to="1"
 					aria-label="Slide 2"
 				></button>
-				<button
-					type="button"
-					data-bs-target="#carouselExampleCaptions"
-					data-bs-slide-to="2"
-					aria-label="Slide 3"
-				></button>
 			</div>
 			<div className="carousel-inner">
 				<div className="carousel-item active">
 					<img
 						src={img4}
+						style={{ height: "100vh" }}
 						className="d-block w-100 img-thumbnail"
 						alt="..."
-						style={{ height: "33vh", objectFit: "cover" }}
 					/>
 					<div className="carousel-caption d-none d-md-block">
-						<h5 className="text-info">Welcome to DocIt</h5>
-						<p className="text-info">
-							A Better Way to Document Your Work
-						</p>
+						{/*	left empty on purpose */}
 					</div>
 				</div>
 				<div className="carousel-item">
 					<img
 						src={img5}
+						style={{ height: "100vh" }}
 						className="d-block w-100 img-thumbnail"
 						alt="..."
-						style={{ height: "33vh", objectFit: "cover" }}
 					/>
-					<div className="carousel-caption d-none d-md-block">
-						<h5 className="text-info">AI Powered</h5>
-						<p className="text-info">
-							Chat and Search. Powered by Google Gemini.
-						</p>
-					</div>
-				</div>
-				<div className="carousel-item">
-					<img
-						src={img6}
-						className="d-block w-100 img-thumbnail"
-						alt="..."
-						style={{ height: "33vh", objectFit: "cover" }}
-					/>
-					<div className="carousel-caption d-none d-md-block">
-						<h5 className="text-info">One More Thing.</h5>
-						<p className="text-info">The Best is yet to Come.</p>
-					</div>
+					<div className="carousel-caption d-none d-md-block"></div>
 				</div>
 			</div>
 			<button

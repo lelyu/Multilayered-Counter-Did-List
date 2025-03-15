@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@invertase/firestore-stripe-payments": "^0.0.7",
+    "aos": "^2.3.4",
     "bootstrap-icons": "^1.11.3",
     "firebase": "^11.3.1",
     "firestore-stripe-payments": "^0.0.1-security",

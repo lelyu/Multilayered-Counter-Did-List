@@ -1,50 +1,110 @@
 import Carousel from "./Carousel.tsx";
-import Scrollspy from "./Scrollspy";
 import React, { useEffect } from "react";
-import { isSignInWithEmailLink, signInWithEmailLink } from "firebase/auth";
-import { auth } from "../config/firebase";
+import AOS from "aos";
+import "aos/dist/aos.css";
+import { useNavigate } from "react-router-dom";
 
 const LandingPage = () => {
-	const checkIfSignedInWithEmail = async () => {
-		if (isSignInWithEmailLink(auth, window.location.href)) {
-			// Additional state parameters can also be passed via URL.
-			// This can be used to continue the user's intended action before triggering
-			// the sign-in operation.
-			// Get the email if available. This should be available if the user completes
-			// the flow on the same device where they started it.
-			let email = window.localStorage.getItem("emailForSignIn");
-			if (!email) {
-				// User opened the link on a different device. To prevent session fixation
-				// attacks, ask the user to provide the associated email again. For example:
-				email = window.prompt(
-					"Please provide your email for confirmation",
-				);
-			}
-			// The client SDK will parse the code from the link for you.
-			signInWithEmailLink(auth, email, window.location.href)
-				.then((result) => {
-					// Clear email from storage.
-					window.localStorage.removeItem("emailForSignIn");
-					// You can access the new user by importing getAdditionalUserInfo
-					// and calling it with result:
-					// getAdditionalUserInfo(result)
-					// You can access the user's profile via:
-					// getAdditionalUserInfo(result)?.profile
-					// You can check if the user is new or existing:
-					// getAdditionalUserInfo(result)?.isNewUser
-				})
-				.catch((error) => {
-					// Some error occurred, you can inspect the code: error.code
-					// Common errors could be invalid email and invalid or expired OTPs.
-				});
-		}
+	const navigate = useNavigate();
+	const handleGetStarted = () => {
+		navigate("/home"); // Navigates to the home page (root)
 	};
 
+	useEffect(() => {
+		AOS.init({
+			duration: 1000, // animation duration in milliseconds
+			once: true, // whether animation should happen only once
+			offset: 100, // offset (in px) from the original trigger point
+		});
+	}, []);
 	return (
 		<>
-			<h4>Landing Page</h4>
-			<Carousel />
-			<Scrollspy />
+			{/* Hero Section */}
+			<section
+				className="bg-dark text-white text-center d-flex align-items-center justify-content-center border border-5 border-success rounded"
+				style={{ height: "100vh" }}
+			>
+				<div className="container">
+					<h1
+						className="display-1 fw-bold"
+						data-aos="fade-up" // <--- Animation type
+					>
+						Make Documenting Easier with{" "}
+						<span className="text-warning">DocIt</span>
+					</h1>
+					<p
+						className="lead mt-3"
+						data-aos="fade-up"
+						data-aos-delay="200" // <--- Delay the animation
+					>
+						AI Powered Document Management Tool
+					</p>
+					<button
+						className="btn btn-success btn-lg mt-4"
+						data-aos="fade-up"
+						data-aos-delay="400"
+						onClick={handleGetStarted}
+					>
+						Get Started
+					</button>
+				</div>
+			</section>
+
+			{/* Existing components */}
+			<div data-aos="fade-up">
+				<Carousel />
+			</div>
+
+			<section
+				className="bg-dark text-white text-center d-flex align-items-center justify-content-center border border-5 border-success rounded"
+				style={{ height: "100vh" }}
+			>
+				<div className="container px-5">
+					{/* Main Heading */}
+					<h1 className="display-3 fw-bold" data-aos="fade-up">
+						Doc it? It docs!
+					</h1>
+
+					{/* Paragraph 1 */}
+					<p
+						className="lead mt-3"
+						data-aos="fade-up"
+						data-aos-delay="200"
+					>
+						Our attention span is getting shorter, and we're getting
+						busier. A lot of times, I couldn't remember what I ate
+						for breakfast!
+					</p>
+
+					{/* Paragraph 2 */}
+					<p className="lead" data-aos="fade-up" data-aos-delay="300">
+						DocIt solves this kind of problem in the workplace.
+						Imagine you're asked to submit a monthly report by the
+						end of today. I bet you can't remember all the details
+						-- details that matter!
+					</p>
+
+					{/* Paragraph 3 */}
+					<p className="lead" data-aos="fade-up" data-aos-delay="400">
+						DocIt is a new way to document and organize your work
+						journal. You just need to enter a few things, and DocIt
+						will handle the rest. You could even use AI to write a
+						work report for you. This time, you won't miss out on
+						any important details, because DocIt meticulously checks
+						your day to day work, acting like an unbiased assistant.
+					</p>
+
+					{/* Call-to-Action Button */}
+					<button
+						className="btn btn-success btn-lg mt-4"
+						data-aos="fade-up"
+						data-aos-delay="500"
+						onClick={handleGetStarted}
+					>
+						Try DocIt Now
+					</button>
+				</div>
+			</section>
 		</>
 	);
 };
