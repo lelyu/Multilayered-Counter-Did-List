@@ -31,6 +31,7 @@ const ListButton: React.FC<ListButtonProps> = ({
 	const [description, setDescription] = useState(listDescription);
 
 	const modalId = `exampleModal-ls-${listId}`;
+	const detailModalId = `exampleDetailModalLs-${listId}`;
 
 	const editAction = async () => {
 		if (name === listName && description === (listDescription || "")) {
@@ -148,6 +149,61 @@ const ListButton: React.FC<ListButtonProps> = ({
 				</div>
 			</div>
 
+			{/* View Details Modal */}
+			<div
+				className="modal fade"
+				id={detailModalId}
+				tabIndex={-1}
+				aria-labelledby="exampleModalLabel"
+				aria-hidden="true"
+			>
+				<div className="modal-dialog">
+					<div className="modal-content">
+						<div className="modal-header">
+							<h1
+								className="modal-title fs-5"
+								id="exampleModalLabel"
+							>
+								Folder Details
+								<span className="ms-3">
+									<i className="bi bi-folder2-open"></i>
+								</span>
+							</h1>
+							<button
+								type="button"
+								className="btn-close"
+								data-bs-dismiss="modal"
+								aria-label="Close"
+							></button>
+						</div>
+						<div className="modal-body">
+							<div className="card" style={{ width: "18rem" }}>
+								<div className="card-body">
+									<h5 className="card-title">{listName}</h5>
+									<p className="card-text">
+										{listDescription?.length === 0
+											? "No description"
+											: listDescription}
+									</p>
+								</div>
+								<ul className="list-group list-group-flush">
+									<li className="list-group-item">{`Date Created: ${dateCreated}`}</li>
+								</ul>
+							</div>
+						</div>
+						<div className="modal-footer">
+							<button
+								type="button"
+								className="btn btn-secondary"
+								data-bs-dismiss="modal"
+							>
+								Close
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+
 			<div
 				className="btn-group"
 				role="group"
@@ -184,9 +240,13 @@ const ListButton: React.FC<ListButtonProps> = ({
 						</button>
 					</li>
 					<li>
-						<a className="dropdown-item" href="#">
+						<button
+							className="dropdown-item"
+							data-bs-toggle="modal"
+							data-bs-target={`#${detailModalId}`}
+						>
 							View Details
-						</a>
+						</button>
 					</li>
 					<li>
 						<hr className="dropdown-divider" />
