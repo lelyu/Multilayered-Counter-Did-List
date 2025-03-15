@@ -207,9 +207,9 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 								className="modal-title fs-5"
 								id="exampleModalLabel"
 							>
-								Folder Details
+								Item Details
 								<span className="ms-3">
-									<i className="bi bi-folder2-open"></i>
+									<i className="bi bi-activity"></i>
 								</span>
 							</h1>
 							<button

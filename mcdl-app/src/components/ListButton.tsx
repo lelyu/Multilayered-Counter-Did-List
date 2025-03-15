@@ -164,9 +164,9 @@ const ListButton: React.FC<ListButtonProps> = ({
 								className="modal-title fs-5"
 								id="exampleModalLabel"
 							>
-								Folder Details
+								List Details
 								<span className="ms-3">
-									<i className="bi bi-folder2-open"></i>
+									<i className="bi bi-list-task"></i>
 								</span>
 							</h1>
 							<button
