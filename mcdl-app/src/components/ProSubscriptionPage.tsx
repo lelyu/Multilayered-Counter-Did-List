@@ -76,7 +76,6 @@ const ProSubscriptionPage = () => {
 					Subscribe to DocIt Pro and get unlimited AI access plus the
 					ability to request new features.
 				</p>
-				{/* Optional: Show product name/description from Firestore */}={" "}
 				{productData && (
 					<div className="text-center mb-5">
 						<h2>{productData.name}</h2>
