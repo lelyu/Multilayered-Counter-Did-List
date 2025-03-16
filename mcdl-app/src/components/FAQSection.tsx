@@ -59,6 +59,33 @@ const FAQSection = () => {
 							</div>
 						</div>
 					</div>
+
+					{/*FAQ3*/}
+					<div className="accordion-item">
+						<h2 className="accordion-header" id="faqHeadingThree">
+							<button
+								className="accordion-button collapsed"
+								type="button"
+								data-bs-toggle="collapse"
+								data-bs-target="#faqCollapseThree"
+								aria-expanded="false"
+								aria-controls="faqCollapseThree"
+							>
+								How do I contact support?
+							</button>
+						</h2>
+						<div
+							id="faqCollapseThree"
+							className="accordion-collapse collapse"
+							aria-labelledby="faqHeadingThree"
+							data-bs-parent="#faqAccordion"
+						>
+							<div className="accordion-body">
+								You can reach out directly to the developer of
+								this app himself at lyulelok@gmail.com.
+							</div>
+						</div>
+					</div>
 				</div>
 			</div>
 		</section>
