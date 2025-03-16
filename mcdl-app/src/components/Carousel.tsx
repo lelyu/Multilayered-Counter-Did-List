@@ -1,5 +1,5 @@
-import img4 from "../assets/docit2.webp";
-import img5 from "../assets/docit3.webp";
+import img5 from "../assets/docit2.webp";
+import img4 from "../assets/docit3.webp";
 
 const Carousel = () => {
 	return (

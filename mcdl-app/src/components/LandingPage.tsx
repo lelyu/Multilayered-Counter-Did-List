@@ -51,11 +51,6 @@ const LandingPage = () => {
 				</div>
 			</section>
 
-			{/* Existing components */}
-			<div data-aos="fade-up">
-				<Carousel />
-			</div>
-
 			<section
 				className="bg-dark text-white text-center d-flex align-items-center justify-content-center border border-5 border-success rounded"
 				style={{ height: "100vh" }}
@@ -106,7 +101,12 @@ const LandingPage = () => {
 					</button>
 				</div>
 			</section>
-			<FAQSection />
+			<div data-aos="fade-up">
+				<FAQSection />
+			</div>
+			<div data-aos="fade-up">
+				<Carousel />
+			</div>
 		</>
 	);
 };
