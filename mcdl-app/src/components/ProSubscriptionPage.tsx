@@ -1,10 +1,73 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { db } from "../config/firebase";
+// Firebase v9+ imports
+import { collection, query, where, getDocs } from "firebase/firestore";
 
 const ProSubscriptionPage = () => {
+	// State to store product & price details
+	const [productData, setProductData] = useState(null);
+	const [monthlyPrice, setMonthlyPrice] = useState(null);
+	const [annualPrice, setAnnualPrice] = useState(null);
+
+	useEffect(() => {
+		const getProducts = async () => {
+			try {
+				// 1. Reference the 'products' collection
+				const productsRef = collection(db, "products");
+
+				// 2. Create a query to fetch only active products
+				const activeProductsQuery = query(
+					productsRef,
+					where("active", "==", true),
+				);
+
+				// 3. Execute the query
+				const productSnapshot = await getDocs(activeProductsQuery);
+
+				// 4. For each product document (assuming only one):
+				productSnapshot.forEach(async (productDoc) => {
+					// Store product info in state
+					setProductData({
+						id: productDoc.id,
+						...productDoc.data(),
+					});
+					// 5. Fetch the 'prices' subcollection from the productDoc
+					const pricesRef = collection(productDoc.ref, "prices");
+					const priceSnapshot = await getDocs(pricesRef);
+					priceSnapshot.forEach((priceDoc) => {
+						const priceData = priceDoc.data();
+
+						// Distinguish monthly vs. annual plan by 'interval'
+						if (priceData.interval === "month") {
+							setMonthlyPrice({
+								id: priceDoc.id,
+								...priceData,
+							});
+						} else if (priceData.interval === "year") {
+							setAnnualPrice({
+								id: priceDoc.id,
+								...priceData,
+							});
+						}
+					});
+				});
+			} catch (error) {
+				console.error("Error fetching products:", error);
+			}
+		};
+		getProducts();
+	}, []);
+
+	// Helper to format the Firestore price (cents) into dollars
+	const formatPrice = (amount) => {
+		// e.g., 499 => "4.99"
+		return (amount / 100).toFixed(2);
+	};
+
 	return (
 		<section
 			className="bg-dark text-light py-5"
-			style={{ height: "100vh" }}
+			style={{ minHeight: "100vh" }}
 		>
 			<div className="container">
 				{/* Page Heading */}
@@ -13,10 +76,15 @@ const ProSubscriptionPage = () => {
 					Subscribe to DocIt Pro and get unlimited AI access plus the
 					ability to request new features.
 				</p>
-
-				{/* Pricing Card */}
-				{/*monthly plans*/}
+				{/* Optional: Show product name/description from Firestore */}={" "}
+				{productData && (
+					<div className="text-center mb-5">
+						<h2>{productData.name}</h2>
+						<p>{productData.description}</p>
+					</div>
+				)}
 				<div className="row justify-content-center">
+					{/* Monthly Plan Card */}
 					<div className="col-md-6 col-lg-4">
 						<div className="card text-center border border-success border-5 shadow-lg">
 							<div className="card-header bg-success text-dark">
@@ -25,7 +93,14 @@ const ProSubscriptionPage = () => {
 								</h3>
 							</div>
 							<div className="card-body bg-dark text-white">
-								<h4 className="card-price">$4.99/month</h4>
+								{monthlyPrice ? (
+									<h4 className="card-price">
+										${formatPrice(monthlyPrice.unit_amount)}
+										/month
+									</h4>
+								) : (
+									<h4 className="card-price">Loading...</h4>
+								)}
 								<ul className="list-unstyled my-4">
 									<li className="mb-2">
 										Unlimited AI Access
@@ -37,7 +112,8 @@ const ProSubscriptionPage = () => {
 							</div>
 						</div>
 					</div>
-					{/*annual plan*/}
+
+					{/* Annual Plan Card */}
 					<div className="col-md-6 col-lg-4">
 						<div className="card text-center border border-danger border-5 shadow-lg">
 							<div className="card-header bg-danger text-dark">
@@ -46,7 +122,14 @@ const ProSubscriptionPage = () => {
 								</h3>
 							</div>
 							<div className="card-body bg-dark text-white">
-								<h4 className="card-price">$48.88/year</h4>
+								{annualPrice ? (
+									<h4 className="card-price">
+										${formatPrice(annualPrice.unit_amount)}
+										/year
+									</h4>
+								) : (
+									<h4 className="card-price">Loading...</h4>
+								)}
 								<ul className="list-unstyled my-4">
 									<li className="mb-2">
 										20% Discount Over Monthly Plan
