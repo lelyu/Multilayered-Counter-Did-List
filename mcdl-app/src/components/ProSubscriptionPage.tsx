@@ -45,7 +45,7 @@ const ProSubscriptionPage = () => {
 				// 3. Execute the query
 				const productSnapshot = await getDocs(activeProductsQuery);
 
-				// 4. For each product doc (assuming only one product):
+				// 4. set states:
 				productSnapshot.forEach(async (productDoc) => {
 					setProductData({
 						id: productDoc.id,
