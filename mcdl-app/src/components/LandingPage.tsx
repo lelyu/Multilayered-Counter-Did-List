@@ -3,6 +3,7 @@ import React, { useEffect } from "react";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import { useNavigate } from "react-router-dom";
+import FAQSection from "./FAQSection.tsx";
 
 const LandingPage = () => {
 	const navigate = useNavigate();
@@ -105,6 +106,7 @@ const LandingPage = () => {
 					</button>
 				</div>
 			</section>
+			<FAQSection />
 		</>
 	);
 };
