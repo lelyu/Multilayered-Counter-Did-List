@@ -7,6 +7,7 @@ import {
 	getDocs,
 	doc,
 	addDoc,
+	getDoc,
 	onSnapshot,
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
@@ -17,6 +18,50 @@ const ProSubscriptionPage = () => {
 	const [annualPrice, setAnnualPrice] = useState(null);
 	const [user, setUser] = useState(null);
 	const [loadingPriceId, setLoadingPriceId] = useState(null);
+	const [isPremium, setIsPremium] = useState(false);
+
+	// check if the current user has active subscription
+	// Check current user's subscription status
+	const checkPremiumStatus = async () => {
+		if (!user) {
+			console.log("User signed out");
+			return;
+		}
+		try {
+			const currentCustomerRef = doc(db, "customers", user.uid);
+			const docSnap = await getDoc(currentCustomerRef);
+			if (docSnap.exists()) {
+				// Use getDocs to fetch subscription documents
+				const subscriptionsRef = collection(
+					currentCustomerRef,
+					"subscriptions",
+				);
+				// Optionally filter for active subscriptions directly:
+				const activeQuery = query(
+					subscriptionsRef,
+					where("status", "==", "active"),
+				);
+				const subscriptionsSnapshot = await getDocs(activeQuery);
+
+				// If there's at least one active subscription, mark user as premium.
+				if (!subscriptionsSnapshot.empty) {
+					setIsPremium(true);
+				} else {
+					setIsPremium(false);
+				}
+			} else {
+				console.log("Current user has no Stripe instance.");
+				setIsPremium(false);
+			}
+		} catch (error) {
+			console.error("Error checking subscription status:", error);
+			setIsPremium(false);
+		}
+	};
+
+	useEffect(() => {
+		checkPremiumStatus();
+	}, [user]);
 
 	useEffect(() => {
 		const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -132,6 +177,11 @@ const ProSubscriptionPage = () => {
 			style={{ minHeight: "100vh" }}
 		>
 			<div className="container">
+				{isPremium && (
+					<h4 className="text-center display-4 mb-4">
+						You are already subscribed to DocIt Pro, yay!
+					</h4>
+				)}
 				{/* Page Heading */}
 				<h1 className="text-center display-4 mb-4">Unlock DocIt Pro</h1>
 				<p className="lead text-center mb-5">
@@ -169,7 +219,6 @@ const ProSubscriptionPage = () => {
 									<li className="mb-2">
 										Unlimited AI Access
 									</li>
-									<li className="mb-2">Feature Requests</li>
 								</ul>
 								<button
 									className="btn btn-success btn-lg"
