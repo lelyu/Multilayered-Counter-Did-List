@@ -14,6 +14,8 @@ import FolderButton from "./FolderButton.tsx";
 import ListButton from "./ListButton";
 import ListItemButton from "./ListItemButton";
 import ChatUI from "./ChatUI.tsx";
+import FoldersPage from "./FoldersPage.tsx";
+import DocumentsPage from "./DocumentsPage.tsx";
 
 interface Folder {
 	id: string;
@@ -690,6 +692,8 @@ const Home: React.FC = () => {
 					</div>
 				</div>
 			</div>
+			<FoldersPage folders={folders} />
+			<DocumentsPage lists={currentLists} />
 			<ChatUI />
 		</>
 	);

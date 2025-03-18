@@ -11,8 +11,12 @@
   },
   "dependencies": {
     "@invertase/firestore-stripe-payments": "^0.0.7",
+    "@tiptap/pm": "^2.11.5",
+    "@tiptap/react": "^2.11.5",
+    "@tiptap/starter-kit": "^2.11.5",
     "aos": "^2.3.4",
     "bootstrap-icons": "^1.11.3",
+    "draft-js": "^0.11.7",
     "firebase": "^11.3.1",
     "firestore-stripe-payments": "^0.0.1-security",
     "framer-motion": "^12.4.7",

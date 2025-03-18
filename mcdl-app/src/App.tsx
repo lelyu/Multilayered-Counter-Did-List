@@ -10,6 +10,9 @@ import ChatUI from "./components/ChatUI.tsx";
 import LandingPage from "./components/LandingPage.tsx";
 import ProSubscriptionPage from "./components/ProSubscriptionPage.tsx";
 import Dashboard from "./components/Dashboard.tsx";
+import FoldersPage from "./components/FoldersPage.tsx";
+import MyEditor from "./components/MyEditor.tsx";
+import EditorJSONPreview from "./components/EditorJSONPreview.tsx";
 
 const App: React.FC = () => {
 	return (
@@ -27,7 +30,17 @@ const App: React.FC = () => {
 						element={<ProSubscriptionPage />}
 					/>
 					<Route path="/dashboard" element={<Dashboard />} />
+					<Route
+						path="/editor"
+						element={
+							<div className="card">
+								<MyEditor />
+							</div>
+						}
+					/>
+					<Route path="/test" element={<EditorJSONPreview />} />
 				</Routes>
+
 				<Footer />
 			</Router>
 		</div>
