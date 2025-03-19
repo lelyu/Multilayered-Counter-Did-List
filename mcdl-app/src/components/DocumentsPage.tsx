@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import MyEditor from "./MyEditor";
 import ListButton from "./ListButton";
+import ListItemButton from "./ListItemButton";
 import { auth, db } from "../config/firebase";
 import {
 	collection,
@@ -19,6 +20,14 @@ interface List {
 	description?: string;
 }
 
+interface Item {
+	id: string;
+	name: string;
+	count: number;
+	dateCreated: Date;
+	description?: string;
+}
+
 interface DocumentsPageProps {
 	user: any; // Adjust the type as needed (e.g., firebase.User)
 }
@@ -32,7 +41,15 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ user }) => {
 	const [currentLists, setCurrLists] = useState<List[]>([]);
 	const [currentList, setCurrentList] = useState<string>("");
 
-	// Fetch lists for the given folderId
+	// List items (or "My Items") related state
+	const [itemName, setItemName] = useState<string>("");
+	const [count, setCount] = useState<number>(0);
+	const [currListItems, setCurrListItems] = useState<Item[]>([]);
+	const [selectedListItem, setSelectedListItem] = useState<string>("");
+	const [itemDescription, setItemDescription] = useState<string>("");
+
+	// ------------------ List functions ------------------
+
 	const getLists = async (userId: string, folderId: string) => {
 		if (!userId || !folderId) return;
 		try {
@@ -65,7 +82,6 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ user }) => {
 		}
 	};
 
-	// Create a new list in the current folder
 	const createList = async (
 		userId: string,
 		folderId: string,
@@ -84,7 +100,6 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ user }) => {
 			console.error("Error creating list: missing list name");
 			return;
 		}
-
 		try {
 			const listRef = await addDoc(
 				collection(db, "users", userId, "folders", folderId, "lists"),
@@ -103,7 +118,6 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ user }) => {
 		}
 	};
 
-	// Delete a list from the current folder
 	const deleteList = async (
 		userId: string,
 		folderId: string,
@@ -128,25 +142,158 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ user }) => {
 		}
 	};
 
-	// Handle list selection change
 	const handleListSelection = (listId: string) => {
 		if (!user) return;
 		setSelectedList(listId);
 	};
 
-	// Fetch lists whenever the user or folderId changes
+	// ------------------ List items functions ------------------
+
+	const getListItems = async (
+		userId: string,
+		folderId: string,
+		listId: string,
+	) => {
+		if (!userId || !folderId) return;
+		if (!listId) {
+			setCurrListItems([]);
+			return;
+		}
+		try {
+			const itemsRef = collection(
+				db,
+				"users",
+				userId,
+				"folders",
+				folderId,
+				"lists",
+				listId,
+				"items",
+			);
+			const itemsSnapshot = await getDocs(itemsRef);
+			if (itemsSnapshot.docs.length === 0) {
+				setCurrListItems([]);
+				return;
+			}
+			const items = itemsSnapshot.docs.map((doc) => ({
+				id: doc.id,
+				name: doc.data().name,
+				count: doc.data().count,
+				dateCreated: doc.data().dateCreated.toDate(),
+				description: doc.data().description || "",
+			}));
+			setCurrListItems(items);
+			setSelectedListItem(items[0]?.id || "");
+		} catch (error) {
+			console.error("Error fetching list items:", error);
+			setCurrListItems([]);
+		}
+	};
+
+	const createItem = async (
+		userId: string,
+		folderId: string,
+		listId: string,
+		itemName: string,
+		count: number,
+		description: string,
+	) => {
+		if (!userId) {
+			alert("You are not logged in");
+			window.location.href = "/login";
+			return;
+		}
+		if (!folderId || !listId) {
+			console.error("Error creating item: missing user or folder ID");
+			return;
+		}
+		if (itemName.trim().length === 0) {
+			console.error("Error creating item: missing item name");
+			return;
+		}
+		try {
+			await addDoc(
+				collection(
+					db,
+					"users",
+					userId,
+					"folders",
+					folderId,
+					"lists",
+					listId,
+					"items",
+				),
+				{
+					createdBy: userId,
+					name: itemName,
+					dateCreated: serverTimestamp(),
+					count: count,
+					parent: { parentFolder: folderId, parentList: listId },
+					description: description,
+				},
+			);
+			await getListItems(userId, folderId, listId);
+			setItemName("");
+			setItemDescription("");
+		} catch (error) {
+			console.error("Error creating item:", error);
+		}
+	};
+
+	const deleteListItem = async (
+		userId: string,
+		folderId: string,
+		listId: string,
+		itemId: string,
+	) => {
+		if (!userId || !folderId || !listId || !itemId) return;
+		try {
+			const listItemRef = doc(
+				db,
+				"users",
+				userId,
+				"folders",
+				folderId,
+				"lists",
+				listId,
+				"items",
+				itemId,
+			);
+			await deleteDoc(listItemRef);
+		} catch (error) {
+			console.error("Error deleting list item:", error);
+		} finally {
+			await getListItems(userId, folderId, listId);
+		}
+	};
+
+	const new_handleListItemSelection = (itemId: string) => {
+		if (!user) return;
+		setSelectedListItem(itemId);
+	};
+
+	// ------------------ Effects ------------------
+
+	// Fetch lists when user or folderId changes
 	useEffect(() => {
 		if (user && folderId) {
-			console.log("Fetching lists for folder:", folderId);
 			getLists(user.uid, folderId);
 		}
 	}, [user, folderId]);
+
+	// Fetch list items whenever selectedList changes
+	useEffect(() => {
+		if (user && folderId && selectedList) {
+			getListItems(user.uid, folderId, selectedList);
+		}
+	}, [user, folderId, selectedList]);
 
 	return (
 		<>
 			<h1>Folder {folderId}</h1>
 			<div className="container-fluid">
 				<div className="row">
+					{/* --- Lists Column --- */}
 					<div className="col-2">
 						<div className="shadow p-3 mb-5 bg-body-tertiary rounded">
 							<h3>My Lists</h3>
@@ -181,61 +328,193 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ user }) => {
 								role="group"
 								aria-label="Vertical button group"
 							>
-								{currentLists.length === 0 && (
+								{currentLists.length === 0 ? (
 									<button
 										className="btn btn-light text-start"
 										disabled
 									>
 										You haven't created any lists yet.
 									</button>
+								) : (
+									currentLists.map((ls) => (
+										<ListButton
+											key={ls.id}
+											deleteAction={() =>
+												user &&
+												folderId &&
+												deleteList(
+													user.uid,
+													folderId,
+													ls.id,
+												)
+											}
+											selectAction={() =>
+												handleListSelection(ls.id)
+											}
+											userId={user?.uid}
+											folderId={folderId}
+											listId={ls.id}
+											listName={ls.name}
+											listDescription={ls.description}
+											dateCreated={ls.dateCreated}
+											isSelected={ls.id === selectedList}
+											onModalClose={() =>
+												user &&
+												folderId &&
+												getLists(user.uid, folderId)
+											}
+										/>
+									))
 								)}
-								{currentLists.map((ls) => (
-									<ListButton
-										key={ls.id}
-										deleteAction={() =>
-											user &&
-											folderId &&
-											deleteList(
-												user.uid,
-												folderId,
-												ls.id,
-											)
-										}
-										selectAction={() =>
-											handleListSelection(ls.id)
-										}
-										userId={user?.uid}
-										folderId={folderId}
-										listId={ls.id}
-										listName={ls.name}
-										listDescription={ls.description}
-										dateCreated={ls.dateCreated}
-										isSelected={ls.id === selectedList}
-										onModalClose={() =>
-											user &&
-											folderId &&
-											getLists(user.uid, folderId)
-										}
-									/>
-								))}
 							</div>
 						</div>
 					</div>
+					{/* --- Editor Column --- */}
 					<div className="col-8">
-						{/* Big text area */}
 						<MyEditor />
 					</div>
+					{/* --- List Items Column --- */}
 					<div className="col-2">
-						{/* Floating counter area */}
-						<button>+</button>
-						list items 1 <button>-</button>
-						<br />
-						<button>+</button>
-						list items 2 <button>-</button>
-						<br />
-						<button>+</button>
-						list items 3 <button>-</button>
+						<div className="shadow p-3 mb-5 bg-body-tertiary rounded">
+							<h3>My Items</h3>
+							<div>
+								<div className="input-group mb-3">
+									<button
+										className="input-group-text btn btn-light"
+										disabled={user === null}
+										onClick={() =>
+											user &&
+											folderId &&
+											selectedList &&
+											createItem(
+												user.uid,
+												folderId,
+												selectedList,
+												itemName,
+												count,
+												itemDescription,
+											)
+										}
+									>
+										New Item
+									</button>
+									<input
+										type="text"
+										className="form-control"
+										aria-label="New item name"
+										value={itemName}
+										onChange={(e) =>
+											setItemName(e.target.value)
+										}
+									/>
+									<span className="input-group-text">
+										Count: {count}
+									</span>
+									<input
+										type="number"
+										className="form-control"
+										value={count}
+										onChange={(e) =>
+											setCount(Number(e.target.value))
+										}
+									/>
+								</div>
+								{/* Collapsible description input */}
+								<div className="container mt-3 mb-3">
+									<button
+										className="btn btn-secondary"
+										type="button"
+										data-bs-toggle="collapse"
+										data-bs-target="#collapseTextarea"
+										aria-expanded="false"
+										aria-controls="collapseTextarea"
+									>
+										Add a description
+									</button>
+									<div
+										className="collapse mt-3 form-floating"
+										id="collapseTextarea"
+									>
+										<textarea
+											className="form-control"
+											rows={5}
+											placeholder="Add a description here"
+											value={itemDescription}
+											onChange={(e) =>
+												setItemDescription(
+													e.target.value,
+												)
+											}
+										></textarea>
+										<label htmlFor="collapseTextarea">
+											Description
+										</label>
+									</div>
+								</div>
+								{/* Render list items */}
+								<div
+									className="btn-group-vertical container"
+									role="group"
+									aria-label="Vertical button group"
+								>
+									{currListItems.length === 0 ? (
+										<button
+											className="btn btn-light text-start"
+											disabled
+										>
+											You haven't created any items yet.
+										</button>
+									) : (
+										currListItems.map((item) => (
+											<ListItemButton
+												key={item.id}
+												deleteAction={() =>
+													user &&
+													folderId &&
+													selectedList &&
+													deleteListItem(
+														user.uid,
+														folderId,
+														selectedList,
+														item.id,
+													)
+												}
+												selectAction={() =>
+													new_handleListItemSelection(
+														item.id,
+													)
+												}
+												userId={user.uid}
+												folderId={folderId}
+												listId={selectedList}
+												listItemId={item.id}
+												listItemName={item.name}
+												dateCreated={item.dateCreated}
+												isSelected={
+													item.id === selectedListItem
+												}
+												count={item.count}
+												itemDescription={
+													item.description
+												}
+												onModalClose={() =>
+													user &&
+													folderId &&
+													selectedList &&
+													getListItems(
+														user.uid,
+														folderId,
+														selectedList,
+													)
+												}
+											/>
+										))
+									)}
+								</div>
+							</div>
+						</div>
 					</div>
+					{/* End of columns */}
 				</div>
 			</div>
 		</>

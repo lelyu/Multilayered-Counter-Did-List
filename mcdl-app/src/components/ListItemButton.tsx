@@ -5,7 +5,7 @@ import { db } from "../config/firebase.ts";
 interface ListItemButtonProps {
 	deleteAction: () => void;
 	selectAction: () => void;
-	onModalClose: () => void; // parent callback
+	onModalClose: () => void;
 	userId: string;
 	folderId: string;
 	listId: string;
@@ -30,24 +30,32 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 	isSelected,
 	count,
 	itemDescription,
-}): Element => {
+}) => {
 	const [currCount, setCurrCount] = useState(count);
 	const [name, setName] = useState(listItemName);
 	const [description, setDescription] = useState(itemDescription);
 	const [isSaving, setIsSaving] = useState(false);
+
+	// Unique IDs for each modal & label
 	const modalId = `exampleModal-ls-item-${listItemId}`;
+	const editModalLabelId = `editModalLabel-${listItemId}`;
+
 	const detailModalId = `exampleDetailModalLs-item-${listItemId}`;
+	const detailModalLabelId = `detailModalLabel-${listItemId}`;
 
 	const editAction = async () => {
 		// if no changes occur return
 		if (
 			currCount === count &&
 			listItemName === name &&
-			(itemDescription === description || itemDescription === "")
+			(itemDescription === description || description === "")
 		) {
+			console.log("itemDescription", itemDescription);
+			console.log("no changes detected");
 			return;
 		}
 		try {
+			console.log("updating database");
 			const itemRef = doc(
 				db,
 				"users",
@@ -59,21 +67,12 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 				"items",
 				listItemId,
 			);
-			if (description && description.length > 0) {
-				await updateDoc(itemRef, {
-					name: name,
-					description: description,
-					dateModified: serverTimestamp(),
-					count: currCount,
-				});
-			} else {
-				await updateDoc(itemRef, {
-					name: name,
-					description: description,
-					dateModified: serverTimestamp(),
-					count: currCount,
-				});
-			}
+			await updateDoc(itemRef, {
+				name,
+				description,
+				dateModified: serverTimestamp(),
+				count: currCount,
+			});
 			onModalClose();
 		} catch (error) {
 			console.log(error);
@@ -81,14 +80,10 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 	};
 
 	const handleCountChanges = async (isAdding: boolean) => {
-		// Compute the new count based on the current value.
-		const newCount = isAdding
-			? Number(currCount) + 1
-			: Number(currCount) - 1;
-		// Update the state with the new count.
+		const newCount = isAdding ? currCount + 1 : currCount - 1;
 		setCurrCount(newCount);
 		setIsSaving(true);
-		// Reference to the document.
+
 		const itemRef = doc(
 			db,
 			"users",
@@ -100,7 +95,6 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 			"items",
 			listItemId,
 		);
-		// Update the document with the new count.
 		await updateDoc(itemRef, { count: newCount });
 		setTimeout(() => {
 			setIsSaving(false);
@@ -109,12 +103,12 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 
 	return (
 		<>
-			{/*modal*/}
+			{/* Edit Item Modal */}
 			<div
 				className="modal fade"
 				id={modalId}
 				tabIndex={-1}
-				aria-labelledby="exampleModalLabel"
+				aria-labelledby={editModalLabelId}
 				aria-hidden="true"
 			>
 				<div className="modal-dialog">
@@ -122,7 +116,7 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 						<div className="modal-header">
 							<h1
 								className="modal-title fs-5"
-								id="exampleModalLabel"
+								id={editModalLabelId}
 							>
 								Edit Item {listItemId}
 							</h1>
@@ -191,13 +185,12 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 				</div>
 			</div>
 
-			{/*modal ends*/}
 			{/* View Details Modal */}
 			<div
 				className="modal fade"
 				id={detailModalId}
 				tabIndex={-1}
-				aria-labelledby="exampleModalLabel"
+				aria-labelledby={detailModalLabelId}
 				aria-hidden="true"
 			>
 				<div className="modal-dialog">
@@ -205,7 +198,7 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 						<div className="modal-header">
 							<h1
 								className="modal-title fs-5"
-								id="exampleModalLabel"
+								id={detailModalLabelId}
 							>
 								Item Details
 								<span className="ms-3">
@@ -232,7 +225,10 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 									</p>
 								</div>
 								<ul className="list-group list-group-flush">
-									<li className="list-group-item">{`Date Created: ${dateCreated}`}</li>
+									<li className="list-group-item">
+										Date Created:{" "}
+										{dateCreated.toLocaleString()}
+									</li>
 								</ul>
 							</div>
 						</div>
@@ -249,16 +245,18 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 				</div>
 			</div>
 
+			{/* If isSaving is true, show spinner */}
 			{isSaving && (
 				<button className="btn btn-success" type="button" disabled>
 					<span
 						className="spinner-grow spinner-grow-sm"
 						aria-hidden="true"
-					></span>
+					/>
 					<span role="status">Saving...</span>
 				</button>
 			)}
 
+			{/* Main Button Group */}
 			<div
 				className="btn-group"
 				role="group"
@@ -268,11 +266,13 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 				<button
 					onClick={selectAction}
 					type="button"
-					className={`btn ${isSelected ? "btn-primary" : "btn-light"} text-start`}
+					className={`btn ${
+						isSelected ? "btn-primary" : "btn-light"
+					} text-start`}
 					style={{ width: "80%" }}
 				>
-					{listItemName}
-					<span className="fst-italic"> Count: {currCount} </span>
+					{listItemName}{" "}
+					<span className="fst-italic">Count: {currCount}</span>
 				</button>
 
 				<button
@@ -325,13 +325,12 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 						<hr className="dropdown-divider" />
 					</li>
 					<li>
-						<a
+						<button
 							onClick={deleteAction}
 							className="btn btn-danger dropdown-item"
-							href="#"
 						>
 							Delete This Item
-						</a>
+						</button>
 					</li>
 				</ul>
 			</div>
