@@ -3,3 +3,14 @@
     padding: 0 2rem; /* Adds some space on left and right */
 }
 
+:root {
+    --purple-light: #e0bbff;
+    --purple: #958DF1;
+    --black: #000;
+    --white: #fff;
+    --gray-3: #ccc;
+    --gray-2: #ddd;
+    --button-padding: 0.5rem 1rem;
+    --border-radius: 4px;
+    --transition-speed: 0.3s;
+}
