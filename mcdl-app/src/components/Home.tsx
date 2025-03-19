@@ -693,7 +693,6 @@ const Home: React.FC = () => {
 				</div>
 			</div>
 			<FoldersPage folders={folders} />
-			<DocumentsPage lists={currentLists} />
 			<ChatUI />
 		</>
 	);

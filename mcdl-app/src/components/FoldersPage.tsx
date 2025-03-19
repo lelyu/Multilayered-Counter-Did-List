@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 const FoldersPage = ({ folders }) => {
 	return (
@@ -47,12 +48,20 @@ const FoldersPage = ({ folders }) => {
 								)}
 							</ul>
 							<div className="card-body">
-								<a href="#" className="card-link">
+								{/* Link to the DocumentsPage with the folder's ID */}
+								<Link
+									to={`/documents/${folder.id}`}
+									className="card-link"
+								>
 									Open Folder
-								</a>
-								<a href="#" className="card-link">
+								</Link>
+								{/* Optionally add an edit link */}
+								<Link
+									to={`/edit-folder/${folder.id}`}
+									className="card-link"
+								>
 									Edit
-								</a>
+								</Link>
 							</div>
 						</div>
 					</div>
