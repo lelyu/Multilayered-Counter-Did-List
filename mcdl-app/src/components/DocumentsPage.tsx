@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import MyEditor from "./MyEditor";
 import ListButton from "./ListButton";
 import ListItemButton from "./ListItemButton";
-import { auth, db } from "../config/firebase";
+import { db } from "../config/firebase";
 import {
 	collection,
 	getDocs,
@@ -295,34 +295,11 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ user }) => {
 				<div className="row">
 					{/* --- Lists Column --- */}
 					<div className="col-2">
-						<div className="shadow p-3 mb-5 bg-body-tertiary rounded">
+						<div className="shadow p-3 mb-5 bg-body-tertiary rounded vh-100">
 							<h3>My Lists</h3>
-							<div className="input-group mb-3">
-								<button
-									className="input-group-text btn btn-light"
-									disabled={user === null}
-									onClick={() =>
-										user &&
-										folderId &&
-										createList(
-											user.uid,
-											folderId,
-											currentList,
-										)
-									}
-								>
-									New List
-								</button>
-								<input
-									value={currentList}
-									onChange={(e) =>
-										setCurrentList(e.target.value)
-									}
-									type="text"
-									className="form-control"
-									aria-label="New list name"
-								/>
-							</div>
+
+							<hr />
+
 							<div
 								className="btn-group-vertical container"
 								role="group"
@@ -375,83 +352,11 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ user }) => {
 					</div>
 					{/* --- List Items Column --- */}
 					<div className="col-2">
-						<div className="shadow p-3 mb-5 bg-body-tertiary rounded">
-							<h3>My Items</h3>
+						<div className="shadow p-3 bg-body-tertiary rounded vh-100">
+							<h3>Current Items</h3>
 							<div>
-								<div className="input-group mb-3">
-									<button
-										className="input-group-text btn btn-light"
-										disabled={user === null}
-										onClick={() =>
-											user &&
-											folderId &&
-											selectedList &&
-											createItem(
-												user.uid,
-												folderId,
-												selectedList,
-												itemName,
-												count,
-												itemDescription,
-											)
-										}
-									>
-										New Item
-									</button>
-									<input
-										type="text"
-										className="form-control"
-										aria-label="New item name"
-										value={itemName}
-										onChange={(e) =>
-											setItemName(e.target.value)
-										}
-									/>
-									<span className="input-group-text">
-										Count: {count}
-									</span>
-									<input
-										type="number"
-										className="form-control"
-										value={count}
-										onChange={(e) =>
-											setCount(Number(e.target.value))
-										}
-									/>
-								</div>
-								{/* Collapsible description input */}
-								<div className="container mt-3 mb-3">
-									<button
-										className="btn btn-secondary"
-										type="button"
-										data-bs-toggle="collapse"
-										data-bs-target="#collapseTextarea"
-										aria-expanded="false"
-										aria-controls="collapseTextarea"
-									>
-										Add a description
-									</button>
-									<div
-										className="collapse mt-3 form-floating"
-										id="collapseTextarea"
-									>
-										<textarea
-											className="form-control"
-											rows={5}
-											placeholder="Add a description here"
-											value={itemDescription}
-											onChange={(e) =>
-												setItemDescription(
-													e.target.value,
-												)
-											}
-										></textarea>
-										<label htmlFor="collapseTextarea">
-											Description
-										</label>
-									</div>
-								</div>
 								{/* Render list items */}
+								<hr />
 								<div
 									className="btn-group-vertical container"
 									role="group"

@@ -26,7 +26,7 @@ const ListButton: React.FC<ListButtonProps> = ({
 	dateCreated,
 	isSelected,
 	onModalClose,
-}): Element => {
+}): React.JSX.Element => {
 	const [name, setName] = useState(listName);
 	const [description, setDescription] = useState(listDescription);
 
