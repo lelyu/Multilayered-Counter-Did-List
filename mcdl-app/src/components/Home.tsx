@@ -1,437 +1,114 @@
 import React, { useState, useEffect } from "react";
 import { auth, db } from "../config/firebase";
-import {
-	collection,
-	getDocs,
-	addDoc,
-	serverTimestamp,
-	deleteDoc,
-	doc,
-} from "firebase/firestore";
-import { onAuthStateChanged } from "firebase/auth";
-import { httpsCallable, getFunctions } from "firebase/functions";
-import FolderButton from "./FolderButton.tsx";
-import ListButton from "./ListButton";
-import ListItemButton from "./ListItemButton";
-import ChatUI from "./ChatUI.tsx";
-import FoldersPage from "./FoldersPage.tsx";
-import DocumentsPage from "./DocumentsPage.tsx";
+import { collection, getDocs } from "firebase/firestore";
+import { onAuthStateChanged, User } from "firebase/auth";
+import FoldersPage from "./FoldersPage";
+import ChatUI from "./ChatUI";
 
 interface Folder {
 	id: string;
 	name: string;
 	dateCreated: Date;
+	dateModified: Date;
 	description?: string;
-}
-
-interface List {
-	id: string;
-	name: string;
-	dateCreated: Date;
-	description?: string;
-}
-
-interface Item {
-	id: string;
-	name: string;
-	count: number;
-	dateCreated: Date;
-	description?: string;
+	userId: string;
 }
 
 const Home: React.FC = () => {
-	// user
-	const [user, setUser] = useState(null);
+	const [user, setUser] = useState<User | null>(null);
 	const [loading, setLoading] = useState(true);
+	const [folders, setFolders] = useState<Folder[]>([]);
 
-	// item related attributes
-	const [itemName, setItemName] = useState<string>(""); // used for creating a new item; bound with input
-	const [count, setCount] = useState<number>(0); // bound with current item
-	const [currListItems, setCurrListItems] = useState<Item[]>([]); // list of items under currently selected list
-	const [selectedListItem, setSelectedListItem] = useState<string>(""); // id of the item. used for setting initial data and button click
-	const [itemDescription, setItemDescription] = useState<string>("");
-
-	// list related attributes
-	const [selectedList, setSelectedList] = useState<string>(""); // id of the list. used for setting initial data and button click
-	const [currentLists, setCurrLists] = useState<List[]>([]); // current lists returned by firestore
-	const [currentList, setCurrentList] = useState<string>(""); // specifically used for new list creation
-
-	// folder related attributes
-	const [folders, setFolders] = useState<Folder[]>([]); // current folders returned by firestore
-	const [selectedFolder, setSelectedFolder] = useState<string>(""); // id of the folder. used for setting initial data and button click
-	const [currentFolder, setCurrentFolder] = useState<string>(""); // specifically used for new folder creation
-
-	// folder related functions
-	const getFolders = async (userId: string) => {
-		if (!userId) return;
-		const foldersRef = collection(db, "users", userId, "folders");
-		const foldersSnapshot = await getDocs(foldersRef);
-		const folders = foldersSnapshot.docs.map((doc) => {
-			return {
-				id: doc.id,
-				name: doc.data().name,
-				dateCreated: doc.data().dateCreated.toDate(),
-				description: doc.data().description
-					? doc.data().description
-					: "",
-			};
-		});
-		setFolders(folders);
-		setSelectedFolder(folders[0].id);
-	};
-
-	const createFolder = async (userId: string, folderName: string) => {
-		if (userId === null) {
-			alert("You are not logged in");
-			window.location.href = "/login";
-		}
-		if (folderName.length === 0) {
-			console.error("Error creating folder: missing folder name");
-			return;
-		}
-		try {
-			const folderRef = collection(db, "users", userId, "folders");
-			await addDoc(folderRef, {
-				createdBy: userId,
-				name: folderName,
-				dateCreated: serverTimestamp(),
-			});
-			await getFolders(userId);
-			setCurrentFolder("");
-			return folderRef.id;
-		} catch (error) {
-			console.error(error);
-		}
-	};
-
-	// note: only deleting current fields
-	const deleteFolder = async (userId: string, folderId: string) => {
-		if (!userId || !folderId) return;
-		try {
-			const folderRef = doc(db, "users", userId, "folders", folderId);
-			await deleteDoc(folderRef);
-		} catch (error) {
-			console.error("Error deleting folder:", error);
-		} finally {
-			await getFolders(userId);
-		}
-	};
-
-	const new_handleFolderSelection = async (folderId: string) => {
-		if (!user) return;
-		setSelectedFolder(folderId);
-	};
-
-	// list related functions
-	const getLists = async (userId: string, folderId: string) => {
-		if (!userId || !folderId) return;
-		try {
-			const listsRef = collection(
-				db,
-				"users",
-				userId,
-				"folders",
-				folderId,
-				"lists",
-			);
-			const listsSnapshot = await getDocs(listsRef);
-			if (listsSnapshot.docs.length > 0) {
-				const lists = listsSnapshot.docs.map((doc) => {
-					return {
-						id: doc.id,
-						name: doc.data().name,
-						dateCreated: doc.data().dateCreated.toDate(),
-						description: doc.data().description
-							? doc.data().description
-							: "",
-					};
-				});
-				setCurrLists(lists);
-				setSelectedList(lists[0].id);
-			} else {
-				setCurrLists([]);
-				setSelectedList("");
-			}
-		} catch (error) {
-			console.error("No available lists", error);
-			setCurrLists([]);
-			setSelectedList("");
-		}
-	};
-
-	const createList = async (
-		userId: string,
-		folderId: string,
-		listName: string,
-	) => {
-		if (!userId) {
-			alert("You are not logged in");
-			window.location.href = "/login";
-		}
-		if (!folderId) {
-			console.error("Error creating list: folder ID");
-			return;
-		}
-		if (listName.length === 0) {
-			console.error("Error creating list: missing list name");
-			return;
-		}
-
-		try {
-			const listRef = await addDoc(
-				collection(db, "users", userId, "folders", folderId, "lists"),
-				{
-					createdBy: userId,
-					name: listName,
-					dateCreated: serverTimestamp(),
-					parent: {
-						parentFolder: folderId,
-					},
-				},
-			);
-			await getLists(userId, folderId);
-			setCurrentList("");
-			return listRef.id; // Return list id for further nesting
-		} catch (error) {
-			console.error("Error creating list:", error);
-		}
-	};
-
-	const deleteList = async (
-		userId: string,
-		folderId: string,
-		listId: string,
-	) => {
-		if (!userId || !folderId || !listId) return;
-		try {
-			const listRef = doc(
-				db,
-				"users",
-				userId,
-				"folders",
-				folderId,
-				"lists",
-				listId,
-			);
-			await deleteDoc(listRef);
-		} catch (error) {
-			console.error("Error deleting folder:", error);
-		} finally {
-			await getLists(userId, selectedFolder);
-		}
-	};
-
-	const new_handleListSelection = async (listId: string) => {
-		if (!user) return;
-		setSelectedList(listId);
-	};
-
-	// item related functions
-	const getListItems = async (
-		userId: string,
-		folderId: string,
-		listId: string,
-	) => {
-		if (!userId || !folderId) {
-			return;
-		}
-		if (!listId) {
-			setCurrListItems([]);
-			return;
-		}
-		const itemsRef = collection(
-			db,
-			"users",
-			userId,
-			"folders",
-			folderId,
-			"lists",
-			listId,
-			"items",
-		);
-		const itemsSnapshot = await getDocs(itemsRef);
-		if (itemsSnapshot.docs.length === 0) {
-			setCurrListItems([]);
-			return;
-		}
-		const items = itemsSnapshot.docs.map((doc) => {
-			return {
-				id: doc.id,
-				name: doc.data().name,
-				count: doc.data().count,
-				dateCreated: doc.data().dateCreated.toDate(),
-				description: doc.data().description
-					? doc.data().description
-					: "",
-			};
-		});
-		setCurrListItems(items);
-		setSelectedListItem(items[0].id);
-	};
-
-	const createItem = async (
-		userId: string,
-		folderId: string,
-		listId: string,
-		itemName: string,
-		count: number,
-		description: string,
-	) => {
-		if (!userId) {
-			alert("You are not logged in");
-			window.location.href = "/login";
-		}
-		if (!folderId || !listId) {
-			console.error("Error creating item: missing user or folder ID");
-			return;
-		}
-		if (itemName.length === 0) {
-			console.error("Error creating item: missing item name");
-			return;
-		}
-		try {
-			const itemRef = await addDoc(
-				collection(
-					db,
-					"users",
-					userId,
-					"folders",
-					folderId,
-					"lists",
-					listId,
-					"items",
-				),
-				{
-					createdBy: userId,
-					name: itemName,
-					dateCreated: serverTimestamp(),
-					count: count,
-					parent: { parentFolder: folderId, parentList: listId },
-					description: description,
-				},
-			);
-			await getListItems(userId, folderId, listId);
-			setItemName("");
-			setItemDescription("");
-			return itemRef.id;
-		} catch (error) {
-			console.error("Error creating item:", error);
-		}
-	};
-
-	const deleteListItem = async (
-		userId: string,
-		folderId: string,
-		listId: string,
-		itemId: string,
-	) => {
-		if (!userId || !folderId || !listId || !itemId) return;
-		try {
-			const listItemRef = doc(
-				db,
-				"users",
-				userId,
-				"folders",
-				folderId,
-				"lists",
-				listId,
-				"items",
-				itemId,
-			);
-			await deleteDoc(listItemRef);
-		} catch (error) {
-			console.error("Error deleting folder:", error);
-		} finally {
-			await getListItems(userId, selectedFolder, selectedList);
-		}
-	};
-
-	const new_handleListItemSelection = async (itemId: string) => {
-		if (!user) return;
-		setSelectedListItem(itemId);
-	};
-
-	// data related functions
-	const fetchAndSetInitialData = async () => {
-		if (!user) return;
-		try {
-			await getFolders(user.uid);
-		} catch (error) {
-			console.error("Error fetching initial data:", error);
-		}
-	};
-
-	// fetch and set user object
+	// Fetch and set user object
 	useEffect(() => {
 		const unsubscribe = onAuthStateChanged(auth, (user) => {
-			if (user !== null) {
+			if (user) {
 				setUser(user);
 			} else {
 				setUser(null);
 			}
-			setLoading(false); // authentication check is complete
+			setLoading(false);
 		});
-		// Cleanup the listener on component unmount
 		return () => unsubscribe();
-	}, []); // run only once on mount
+	}, []);
 
-	// whenever user changes get new folders
+	// Fetch folders when user changes
 	useEffect(() => {
-		if (user) {
-			fetchAndSetInitialData().then();
-		}
-	}, [user]); // run when user changes
+		const fetchFolders = async () => {
+			if (!user) return;
+			try {
+				const foldersRef = collection(db, "users", user.uid, "folders");
+				const foldersSnapshot = await getDocs(foldersRef);
+				const folders = foldersSnapshot.docs.map((doc) => {
+					const data = doc.data();
+					return {
+						id: doc.id,
+						name: data.name,
+						dateCreated: data.dateCreated?.toDate() || new Date(),
+						dateModified: data.dateModified?.toDate() || data.dateCreated?.toDate() || new Date(),
+						description: data.description || "",
+						userId: user.uid
+					};
+				});
+				setFolders(folders);
+			} catch (error) {
+				console.error("Error fetching folders:", error);
+			}
+		};
 
-	// whenever selected folder changes get new lists
-	useEffect(() => {
-		if (user !== null) {
-			getLists(user.uid, selectedFolder).then(() => {
-				return;
-			});
-		}
-	}, [selectedFolder]);
+		fetchFolders();
+	}, [user]);
 
-	// whenever selected list changes get new items
-	useEffect(() => {
-		if (user !== null) {
-			getListItems(user.uid, selectedFolder, selectedList).then();
-		}
-	}, [selectedList]);
+	if (loading) {
+		return (
+			<button className="btn btn-primary" type="button" disabled>
+				<span className="spinner-border spinner-border-sm" aria-hidden="true"></span>
+				<span role="status">Loading...</span>
+			</button>
+		);
+	}
 
-	// testing cloud functions API
-	const onTestClick = async () => {
-		try {
-			const testPrompt = httpsCallable(getFunctions(), "summarizeData");
-			const response = await testPrompt({
-				prompt: "Tell me about yourself!",
-			});
-			console.log(response);
-		} catch (error) {
-			console.error("Error calling generateResponse:", error);
-		}
-	};
+	if (!user) {
+		return (
+			<div className="container mt-4">
+				<h3>Welcome to DocIt</h3>
+				<p>Please log in to use the application.</p>
+			</div>
+		);
+	}
+
+	if (!user.emailVerified) {
+		return (
+			<div className="container mt-4">
+				<h3>Email Verification Required</h3>
+				<p>Please verify your email address to use the application.</p>
+			</div>
+		);
+	}
 
 	return (
 		<>
-			<div className="container-fluid">
-				{user === null && <h3>Welcome to DocIt.</h3>}
-				{loading && (
-					<button className="btn btn-primary" type="button" disabled>
-						<span
-							className="spinner-border spinner-border-sm"
-							aria-hidden="true"
-						></span>
-						<span role="status">Loading...</span>
-					</button>
-				)}
-				{user === null && <h3>You need to login to use this app.</h3>}
-				{!user?.emailVerified && (
-					<h3>You need verify your account to use this app.</h3>
-				)}
-				{/* Main content row with 3 columns: Folders, Items, Lists */}
-				
-			</div>
-			<FoldersPage folders={folders} userId={user?.uid} onFolderUpdate={() => getFolders(user?.uid)} />
+			<FoldersPage 
+				folders={folders} 
+				userId={user.uid} 
+				onFolderUpdate={() => {
+					const foldersRef = collection(db, "users", user.uid, "folders");
+					getDocs(foldersRef).then(snapshot => {
+						const updatedFolders = snapshot.docs.map(doc => {
+							const data = doc.data();
+							return {
+								id: doc.id,
+								name: data.name,
+								dateCreated: data.dateCreated?.toDate() || new Date(),
+								dateModified: data.dateModified?.toDate() || data.dateCreated?.toDate() || new Date(),
+								description: data.description || "",
+								userId: user.uid
+							};
+						});
+						setFolders(updatedFolders);
+					});
+				}} 
+			/>
 			<ChatUI />
 		</>
 	);
