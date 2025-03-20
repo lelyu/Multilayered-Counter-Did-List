@@ -1,5 +1,11 @@
 {
   "dependencies": {
+    "@tiptap/extension-color": "^2.11.5",
+    "@tiptap/extension-list-item": "^2.11.5",
+    "@tiptap/extension-placeholder": "^2.11.5",
+    "@tiptap/extension-text-style": "^2.11.5",
+    "@tiptap/react": "^2.11.5",
+    "@tiptap/starter-kit": "^2.11.5",
     "@types/bootstrap": "^5.2.10",
     "bootstrap": "^5.3.3"
   }

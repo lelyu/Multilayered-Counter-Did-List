@@ -409,7 +409,12 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ user }) => {
 
 				{/* Editor */}
 				<div className="flex-grow-1 bg-white">
-					<MyEditor />
+					<MyEditor 
+						userId={user?.uid}
+						folderId={folderId}
+						listId={selectedList}
+						listItemId={selectedListItem}
+					/>
 				</div>
 
 				{/* List Items Sidebar */}
