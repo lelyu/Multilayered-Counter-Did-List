@@ -11,6 +11,7 @@ import {
 	serverTimestamp,
 	deleteDoc,
 	doc,
+	setDoc,
 } from "firebase/firestore";
 import { User } from 'firebase/auth';
 import { createPortal } from 'react-dom';
@@ -56,6 +57,19 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ user }) => {
 	const [isItemFormVisible, setIsItemFormVisible] = useState(false);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
+	// Initialize Bootstrap tooltips
+	useEffect(() => {
+		// @ts-ignore
+		const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+		// @ts-ignore
+		const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+		
+		// Cleanup tooltips on unmount
+		return () => {
+			tooltipList.forEach(tooltip => tooltip.dispose());
+		};
+	}, []);
+
 	// ------------------ List functions ------------------
 
 	const getLists = async (userId: string, folderId: string) => {
@@ -78,15 +92,22 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ user }) => {
 					description: doc.data().description || "",
 				}));
 				setCurrLists(lists);
-				setSelectedList(lists[0].id);
+				// Set first list as selected and fetch its items
+				const firstListId = lists[0].id;
+				setSelectedList(firstListId);
+				getListItems(userId, folderId, firstListId);
 			} else {
 				setCurrLists([]);
 				setSelectedList("");
+				setCurrListItems([]);
+				setSelectedListItem("");
 			}
 		} catch (error) {
 			console.error("No available lists", error);
 			setCurrLists([]);
 			setSelectedList("");
+			setCurrListItems([]);
+			setSelectedListItem("");
 		}
 	};
 
@@ -151,8 +172,12 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ user }) => {
 	};
 
 	const handleListSelection = (listId: string) => {
-		if (!user) return;
+		if (!user || !folderId) return;
 		setSelectedList(listId);
+		// Clear current items and selected item before fetching new ones
+		setCurrListItems([]);
+		setSelectedListItem("");
+		getListItems(user.uid, folderId, listId);
 	};
 
 	// ------------------ List items functions ------------------
@@ -165,6 +190,7 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ user }) => {
 		if (!userId || !folderId) return;
 		if (!listId) {
 			setCurrListItems([]);
+			setSelectedListItem("");
 			return;
 		}
 		try {
@@ -181,20 +207,26 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ user }) => {
 			const itemsSnapshot = await getDocs(itemsRef);
 			if (itemsSnapshot.docs.length === 0) {
 				setCurrListItems([]);
+				setSelectedListItem("");
 				return;
 			}
-			const items = itemsSnapshot.docs.map((doc) => ({
-				id: doc.id,
-				name: doc.data().name,
-				count: doc.data().count,
-				dateCreated: doc.data().dateCreated.toDate(),
-				description: doc.data().description || "",
-			}));
+			const items = itemsSnapshot.docs.map((doc) => {
+				const data = doc.data();
+				return {
+					id: doc.id,
+					name: data.name || "",
+					count: data.count || 0,
+					dateCreated: data.dateCreated?.toDate() || new Date(),
+					description: data.description || "",
+				};
+			});
 			setCurrListItems(items);
+			// Set first item as selected
 			setSelectedListItem(items[0]?.id || "");
 		} catch (error) {
 			console.error("Error fetching list items:", error);
 			setCurrListItems([]);
+			setSelectedListItem("");
 		}
 	};
 
@@ -220,26 +252,29 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ user }) => {
 			return;
 		}
 		try {
-			await addDoc(
-				collection(
-					db,
-					"users",
-					userId,
-					"folders",
-					folderId,
-					"lists",
-					listId,
-					"items",
-				),
-				{
-					createdBy: userId,
-					name: itemName,
-					dateCreated: serverTimestamp(),
-					count: count,
-					parent: { parentFolder: folderId, parentList: listId },
-					description: description,
-				},
-			);
+			const docRef = doc(collection(
+				db,
+				"users",
+				userId,
+				"folders",
+				folderId,
+				"lists",
+				listId,
+				"items",
+			));
+
+			// Create the document with initial content
+			await setDoc(docRef, {
+				createdBy: userId,
+				name: itemName,
+				dateCreated: serverTimestamp(),
+				count: count,
+				parent: { parentFolder: folderId, parentList: listId },
+				description: description,
+				content: "", // Initialize with empty content
+				lastModified: new Date(),
+			});
+
 			await getListItems(userId, folderId, listId);
 			setItemName("");
 			setItemDescription("");
@@ -275,26 +310,19 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ user }) => {
 		}
 	};
 
-	const new_handleListItemSelection = (itemId: string) => {
-		if (!user) return;
+	const handleListItemSelection = (itemId: string) => {
+		if (!user || !folderId || !selectedList) return;
 		setSelectedListItem(itemId);
 	};
 
 	// ------------------ Effects ------------------
 
-	// Fetch lists when user or folderId changes
+	// Fetch lists and set initial selection
 	useEffect(() => {
-		if (user && folderId) {
+		if (user?.uid && folderId) {
 			getLists(user.uid, folderId);
 		}
-	}, [user, folderId]);
-
-	// Fetch list items whenever selectedList changes
-	useEffect(() => {
-		if (user && folderId && selectedList) {
-			getListItems(user.uid, folderId, selectedList);
-		}
-	}, [user, folderId, selectedList]);
+	}, [user?.uid, folderId]);
 
 	const handleCreateList = async () => {
 		if (user?.uid && folderId && currentList.trim()) {
@@ -447,12 +475,30 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ user }) => {
 
 					{/* Editor */}
 					<div className="flex-grow-1 bg-white">
-						<MyEditor 
-							userId={user?.uid}
-							folderId={folderId}
-							listId={selectedList}
-							listItemId={selectedListItem}
-						/>
+						{!selectedList ? (
+							<div className="d-flex flex-column justify-content-center align-items-center h-100 text-muted">
+								<i className="bi bi-list-task display-4 mb-3"></i>
+								<h5 className="mb-2">No List Selected</h5>
+								<p className="text-center mb-0">
+									Select or create a list to get started
+								</p>
+							</div>
+						) : currListItems.length === 0 ? (
+							<div className="d-flex flex-column justify-content-center align-items-center h-100 text-muted">
+								<i className="bi bi-file-earmark-text display-4 mb-3"></i>
+								<h5 className="mb-2">No Items in List</h5>
+								<p className="text-center mb-0">
+									Create an item in the list to start editing
+								</p>
+							</div>
+						) : (
+							<MyEditor 
+								userId={user?.uid}
+								folderId={folderId}
+								listId={selectedList}
+								listItemId={selectedListItem}
+							/>
+						)}
 					</div>
 
 					{/* List Items Sidebar */}
@@ -548,7 +594,7 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ user }) => {
 							</div>
 
 							{/* List Items */}
-							<div>
+							<div className="list-group list-group-flush">
 								{!selectedList ? (
 									<div className="text-muted small text-center">
 										Select a list to view items
@@ -573,9 +619,7 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ user }) => {
 												)
 											}
 											selectAction={() =>
-												new_handleListItemSelection(
-													item.id,
-												)
+												handleListItemSelection(item.id)
 											}
 											userId={user?.uid || ""}
 											folderId={folderId || ""}
@@ -583,11 +627,9 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ user }) => {
 											listItemId={item.id}
 											listItemName={item.name}
 											dateCreated={item.dateCreated}
-											isSelected={
-												item.id === selectedListItem
-											}
+											isSelected={item.id === selectedListItem}
 											count={item.count}
-											itemDescription={item.description || ""}
+											itemDescription={item.description}
 											onModalClose={() =>
 												user?.uid &&
 												folderId &&

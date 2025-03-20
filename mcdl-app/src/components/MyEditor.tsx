@@ -215,13 +215,11 @@ const MyEditor: React.FC<EditorProps> = ({
 				const docSnap = await getDoc(docRef);
 
 				if (docSnap.exists()) {
-					setContent(docSnap.data().content || "");
+					const data = docSnap.data();
+					setContent(data.content || "");
+					setLastSaved(data.lastModified?.toDate() || null);
 				} else {
-					// Initialize the document if it doesn't exist
-					await updateDoc(docRef, {
-						content: "",
-						lastModified: new Date(),
-					});
+					console.error(`Document ${listItemId} not found in list ${listId}`);
 					setContent("");
 				}
 			} catch (error) {
