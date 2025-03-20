@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import { Link } from "react-router-dom";
-import { collection, query, orderBy, limit, getDocs, doc, updateDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
+import { collection, query, orderBy, limit, getDocs, doc, updateDoc, deleteDoc, serverTimestamp, addDoc } from "firebase/firestore";
 import { db } from "../config/firebase";
 import { createPortal } from 'react-dom';
 
@@ -32,6 +32,8 @@ const FoldersPage: React.FC<FoldersPageProps> = ({ folders, userId, onFolderUpda
 	const [editName, setEditName] = useState("");
 	const [editDescription, setEditDescription] = useState("");
 	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [newFolderName, setNewFolderName] = useState("");
+	const [isCreating, setIsCreating] = useState(false);
 
 	// Fetch recent lists for each folder
 	useEffect(() => {
@@ -123,11 +125,85 @@ const FoldersPage: React.FC<FoldersPageProps> = ({ folders, userId, onFolderUpda
 		}
 	};
 
+	const handleCreateFolder = async () => {
+		if (!userId) {
+			alert("You are not logged in");
+			window.location.href = "/login";
+		}
+		if (newFolderName.length === 0) {
+			console.error("Error creating folder: missing folder name");
+			return;
+		}
+
+		setIsCreating(true);
+		try {
+			const folderRef = collection(db, "users", userId, "folders");
+			await addDoc(folderRef, {
+				createdBy: userId,
+				name: newFolderName,
+				dateCreated: serverTimestamp(),
+				dateModified: serverTimestamp(),
+			});
+			setNewFolderName("");
+			onFolderUpdate();
+		} catch (error) {
+			console.error("Error creating folder:", error);
+		} finally {
+			setIsCreating(false);
+		}
+	};
+
 	const modalId = editingFolder ? `modal-folder-${editingFolder.id}` : null;
 
 	return (
 		<>
 			<div className="container-fluid py-4">
+				{/* New Folder Input */}
+				<div className="row mb-4">
+					<div className="col-12">
+						<div className="card shadow-sm">
+							<div className="card-body">
+								<h5 className="card-title mb-3">
+									<i className="bi bi-plus-circle me-2"></i>
+									Create New Folder
+								</h5>
+								<div className="input-group">
+									<input
+										type="text"
+										className="form-control"
+										placeholder="Enter folder name"
+										value={newFolderName}
+										onChange={(e) => setNewFolderName(e.target.value)}
+										onKeyDown={(e) => {
+											if (e.key === 'Enter') {
+												handleCreateFolder();
+											}
+										}}
+										disabled={isCreating}
+									/>
+									<button
+										className="btn btn-primary"
+										onClick={handleCreateFolder}
+										disabled={isCreating || newFolderName.trim() === ""}
+									>
+										{isCreating ? (
+											<>
+												<span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+												Creating...
+											</>
+										) : (
+											<>
+												<i className="bi bi-plus-lg me-2"></i>
+												Create Folder
+											</>
+										)}
+									</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
 				<div className="row g-4">
 					{folders.map((folder) => (
 						<div

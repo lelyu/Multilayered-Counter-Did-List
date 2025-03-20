@@ -5,10 +5,14 @@ import {
 	createCheckoutSession,
 	onCurrentUserSubscriptionUpdate,
 } from "@invertase/firestore-stripe-payments";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const Navbar: React.FC = () => {
 	const [user, setUser] = useState(null);
 	const [loading, setLoading] = useState(true); // loading state
+	const location = useLocation();
+	const navigate = useNavigate();
+
 	useEffect(() => {
 		const unsubscribe = onAuthStateChanged(auth, (user) => {
 			if (user) {
@@ -49,6 +53,9 @@ const Navbar: React.FC = () => {
 			});
 	};
 
+	const isSimplifiedView = location.pathname === "/simplified";
+	const isHomeView = location.pathname === "/home";
+
 	return (
 		<>
 			<nav className="navbar navbar-expand-lg bg-body-tertiary">
@@ -76,9 +83,19 @@ const Navbar: React.FC = () => {
 							<li className="nav-item">
 								<a
 									href="/home"
-									className="nav-link btn btn-light"
+									className={`nav-link btn ${isHomeView ? 'btn-primary' : 'btn-light'}`}
 								>
-									My Docs
+									<i className="bi bi-file-earmark-text me-1"></i>
+									Document Editor
+								</a>
+							</li>
+							<li className="nav-item">
+								<a
+									href="/simplified_view"
+									className={`nav-link btn ${isSimplifiedView ? 'btn-primary text-white' : 'btn-light'}`}
+								>
+									<i className="bi bi-list-check me-1"></i>
+									Simple View
 								</a>
 							</li>
 						</ul>
