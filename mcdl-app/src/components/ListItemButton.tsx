@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
-import { db } from "../config/firebase.ts";
+import { db } from "../config/firebase";
+import { Tooltip } from 'bootstrap';
 
 interface ListItemButtonProps {
 	deleteAction: () => void;
@@ -36,11 +37,32 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 	const [description, setDescription] = useState(itemDescription);
 	const [isSaving, setIsSaving] = useState(false);
 
+	// Initialize tooltips after component mounts
+	useEffect(() => {
+		const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+		tooltips.forEach(tooltip => {
+			new Tooltip(tooltip);
+		});
+
+		// Cleanup tooltips on unmount
+		return () => {
+			tooltips.forEach(tooltip => {
+				const bsTooltip = Tooltip.getInstance(tooltip);
+				bsTooltip?.dispose();
+			});
+		};
+	}, [listItemName, currCount]);
+
 	// Unique IDs for each modal & label
 	const modalId = `exampleModal-ls-item-${listItemId}`;
 	const editModalLabelId = `editModalLabel-${listItemId}`;
 	const detailModalId = `exampleDetailModalLs-item-${listItemId}`;
 	const detailModalLabelId = `detailModalLabel-${listItemId}`;
+
+	// Format large numbers with commas
+	const formatNumber = (num: number) => {
+		return num.toLocaleString();
+	};
 
 	// Update the item (name, description, count)
 	const editAction = async () => {
@@ -49,7 +71,6 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 			listItemName === name &&
 			(itemDescription === description || description === "")
 		) {
-			console.log("No changes detected.");
 			return;
 		}
 		try {
@@ -72,44 +93,41 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 			});
 			onModalClose();
 		} catch (error) {
-			console.log(error);
+			console.error("Error updating item:", error);
 		}
 	};
 
 	// Increment or decrement the count
 	const handleCountChanges = async (isAdding: boolean) => {
 		const newCount = isAdding ? currCount + 1 : currCount - 1;
+		if (newCount < 0) return; // Prevent negative counts
+		
 		setCurrCount(newCount);
 		setIsSaving(true);
-		const itemRef = doc(
-			db,
-			"users",
-			userId,
-			"folders",
-			folderId,
-			"lists",
-			listId,
-			"items",
-			listItemId,
-		);
-		await updateDoc(itemRef, { count: newCount });
-		setTimeout(() => {
-			setIsSaving(false);
-		}, 300);
+		try {
+			const itemRef = doc(
+				db,
+				"users",
+				userId,
+				"folders",
+				folderId,
+				"lists",
+				listId,
+				"items",
+				listItemId,
+			);
+			await updateDoc(itemRef, { count: newCount });
+		} catch (error) {
+			console.error("Error updating count:", error);
+			setCurrCount(currCount); // Revert on error
+		} finally {
+			setTimeout(() => setIsSaving(false), 300);
+		}
 	};
 
-	// OPTIONAL: If you're not using React Bootstrap or similar,
-	// you might need to initialize tooltips yourself:
-	// useEffect(() => {
-	//   const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-	//   tooltipTriggerList.map(function (tooltipTriggerEl) {
-	//     return new bootstrap.Tooltip(tooltipTriggerEl)
-	//   })
-	// }, [])
-
 	return (
-		<>
-			{/* ===== Edit Modal ===== */}
+		<div className="mb-2 w-100">
+			{/* Edit Modal */}
 			<div
 				className="modal fade"
 				id={modalId}
@@ -117,14 +135,15 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 				aria-labelledby={editModalLabelId}
 				aria-hidden="true"
 			>
-				<div className="modal-dialog">
-					<div className="modal-content">
+				<div className="modal-dialog modal-dialog-centered">
+					<div className="modal-content shadow-sm">
 						<div className="modal-header">
 							<h1
-								className="modal-title fs-5"
+								className="modal-title fs-5 d-flex align-items-center"
 								id={editModalLabelId}
 							>
-								Edit Item {listItemId}
+								<i className="bi bi-pencil-square me-2"></i>
+								Edit Item
 							</h1>
 							<button
 								type="button"
@@ -137,35 +156,65 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 							<form>
 								<div className="mb-3">
 									<label
-										htmlFor="recipient-name"
-										className="col-form-label"
+										htmlFor="item-name"
+										className="form-label"
 									>
 										Item Name
 									</label>
 									<input
 										type="text"
 										className="form-control"
-										id="recipient-name"
+										id="item-name"
 										value={name}
-										onChange={(e) =>
-											setName(e.target.value)
-										}
+										onChange={(e) => setName(e.target.value)}
+										placeholder="Enter item name"
 									/>
 								</div>
 								<div className="mb-3">
 									<label
-										htmlFor="message-text"
-										className="col-form-label"
+										htmlFor="item-count"
+										className="form-label"
 									>
-										Add a Description
+										Count
+									</label>
+									<div className="input-group">
+										<button
+											className="btn btn-outline-secondary"
+											type="button"
+											onClick={() => setCurrCount(prev => Math.max(0, prev - 1))}
+										>
+											<i className="bi bi-dash"></i>
+										</button>
+										<input
+											type="number"
+											className="form-control text-center"
+											id="item-count"
+											value={currCount}
+											onChange={(e) => setCurrCount(Math.max(0, parseInt(e.target.value) || 0))}
+										/>
+										<button
+											className="btn btn-outline-secondary"
+											type="button"
+											onClick={() => setCurrCount(prev => prev + 1)}
+										>
+											<i className="bi bi-plus"></i>
+										</button>
+									</div>
+								</div>
+								<div className="mb-3">
+									<label
+										htmlFor="item-description"
+										className="form-label"
+									>
+										Description
 									</label>
 									<textarea
 										className="form-control"
-										id="message-text"
+										id="item-description"
 										value={description}
-										onChange={(e) =>
-											setDescription(e.target.value)
-										}
+										onChange={(e) => setDescription(e.target.value)}
+										placeholder="Add a description for your item"
+										rows={4}
 									></textarea>
 								</div>
 							</form>
@@ -173,25 +222,25 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 						<div className="modal-footer">
 							<button
 								type="button"
-								className="btn btn-secondary"
+								className="btn btn-outline-secondary"
 								data-bs-dismiss="modal"
 							>
-								Close
+								Cancel
 							</button>
 							<button
 								type="button"
 								className="btn btn-primary"
-								data-bs-dismiss="modal"
 								onClick={editAction}
+								data-bs-dismiss="modal"
 							>
-								Save
+								Save Changes
 							</button>
 						</div>
 					</div>
 				</div>
 			</div>
 
-			{/* ===== Details Modal ===== */}
+			{/* Details Modal */}
 			<div
 				className="modal fade"
 				id={detailModalId}
@@ -199,17 +248,15 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 				aria-labelledby={detailModalLabelId}
 				aria-hidden="true"
 			>
-				<div className="modal-dialog">
-					<div className="modal-content">
+				<div className="modal-dialog modal-dialog-centered">
+					<div className="modal-content shadow-sm">
 						<div className="modal-header">
 							<h1
 								className="modal-title fs-5"
 								id={detailModalLabelId}
 							>
+								<i className="bi bi-info-circle me-2"></i>
 								Item Details
-								<span className="ms-3">
-									<i className="bi bi-activity"></i>
-								</span>
 							</h1>
 							<button
 								type="button"
@@ -219,23 +266,20 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 							></button>
 						</div>
 						<div className="modal-body">
-							<div className="card" style={{ width: "18rem" }}>
-								<div className="card-body">
-									<h5 className="card-title">
-										{listItemName}
-									</h5>
-									<p className="card-text">
-										{itemDescription?.length === 0
-											? "No description"
-											: itemDescription}
-									</p>
-								</div>
-								<ul className="list-group list-group-flush">
-									<li className="list-group-item">
-										Date Created:{" "}
-										{dateCreated.toLocaleString()}
-									</li>
-								</ul>
+							<h4 className="mb-3">{listItemName}</h4>
+							<div className="mb-3">
+								<span className="badge bg-primary rounded-pill fs-6">
+									Count: {formatNumber(currCount)}
+								</span>
+							</div>
+							<p className="text-muted mb-4">
+								{itemDescription?.length === 0
+									? "No description provided"
+									: itemDescription}
+							</p>
+							<div className="text-muted small">
+								<i className="bi bi-calendar3 me-2"></i>
+								Created on {dateCreated.toLocaleDateString()}
 							</div>
 						</div>
 						<div className="modal-footer">
@@ -251,107 +295,120 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 				</div>
 			</div>
 
-			{/* ===== Saving Spinner ===== */}
-			{isSaving && (
-				<button className="btn btn-success mb-2" type="button" disabled>
-					<span
-						className="spinner-grow spinner-grow-sm"
-						aria-hidden="true"
-					/>
-					<span role="status"> Saving...</span>
-				</button>
-			)}
-
-			{/* ===== Row Layout for Each List Item ===== */}
-			<div className="row row-cols-1">
-				<div className="col">
-					<div className="d-flex flex-wrap align-items-center justify-content-between p-2 border rounded">
-						{/* Item Name: truncated + tooltip */}
-						<div
-							className={`text-truncate ${isSelected ? "fw-bold" : ""}`}
-							style={{ maxWidth: "120px" }}
-							data-bs-toggle="tooltip"
-							title={listItemName}
+			{/* Main Item Button */}
+			<div className={`card w-100 ${isSelected ? 'border-primary' : 'border-light'}`}>
+				<div className="card-body py-2 px-3">
+					<div className="row align-items-center">
+						{/* Item Name and Count */}
+						<div 
+							className="col d-flex align-items-center"
 							onClick={selectAction}
+							role="button"
+							style={{ cursor: 'pointer' }}
 						>
-							{listItemName}
+							<i className={`bi bi-box me-2 ${isSelected ? 'text-primary' : ''}`}></i>
+							<div className="min-w-0"> {/* prevents flex item from overflowing */}
+								<div 
+									className={`text-truncate ${isSelected ? 'fw-semibold' : ''}`}
+									data-bs-toggle="tooltip"
+									data-bs-placement="top"
+									title={listItemName}
+								>
+									{listItemName}
+								</div>
+								<small 
+									className="text-muted text-truncate d-block"
+									data-bs-toggle="tooltip"
+									data-bs-placement="bottom"
+									title={`Count: ${formatNumber(currCount)}`}
+								>
+									Count: {formatNumber(currCount)}
+								</small>
+							</div>
 						</div>
 
-						{/* Count Increment/Decrement */}
-						<div
-							className="input-group input-group-sm"
-							style={{ width: "120px" }}
-						>
-							<button
-								className="btn btn-outline-secondary"
-								onClick={() => handleCountChanges(false)}
-								disabled={isSaving}
-							>
-								<i className="bi bi-dash"></i>
-							</button>
-							<input
-								type="text"
-								className="form-control text-center"
-								value={currCount}
-								readOnly
-							/>
-							<button
-								className="btn btn-outline-secondary"
-								onClick={() => handleCountChanges(true)}
-								disabled={isSaving}
-							>
-								<i className="bi bi-plus"></i>
-							</button>
-						</div>
+						{/* Quick Actions */}
+						<div className="col-auto d-flex align-items-center gap-2">
+							{/* Count Controls */}
+							<div className="btn-group btn-group-sm">
+								<button
+									className="btn btn-outline-secondary"
+									onClick={() => handleCountChanges(false)}
+									disabled={isSaving || currCount <= 0}
+								>
+									<i className="bi bi-dash"></i>
+								</button>
+								<button
+									className="btn btn-outline-secondary"
+									onClick={() => handleCountChanges(true)}
+									disabled={isSaving}
+								>
+									<i className="bi bi-plus"></i>
+								</button>
+							</div>
 
-						{/* Actions Dropdown */}
-						<div className="btn-group">
-							<button
-								disabled={isSaving}
-								type="button"
-								className="btn btn-light dropdown-toggle"
-								data-bs-toggle="dropdown"
-								aria-expanded="false"
-							>
-								Actions
-							</button>
-							<ul className="dropdown-menu">
-								<li>
-									<button
-										className="dropdown-item"
-										data-bs-toggle="modal"
-										data-bs-target={`#${modalId}`}
-										data-bs-whatever="@mdo"
-									>
-										Edit Item
-									</button>
-								</li>
-								<li>
-									<button
-										className="dropdown-item"
-										data-bs-toggle="modal"
-										data-bs-target={`#${detailModalId}`}
-									>
-										View Details
-									</button>
-								</li>
-								<li>
-									<hr className="dropdown-divider" />
-								</li>
-								<li>
-									<button
-										onClick={deleteAction}
-										className="btn btn-danger dropdown-item"
-									>
-										Delete This Item
-									</button>
-								</li>
-							</ul>
+							{/* Actions Dropdown */}
+							<div className="dropdown">
+								<button
+									type="button"
+									className="btn btn-light btn-sm"
+									data-bs-toggle="dropdown"
+									data-bs-auto-close="true"
+									aria-expanded="false"
+									disabled={isSaving}
+								>
+									<i className="bi bi-three-dots-vertical"></i>
+								</button>
+								<ul className="dropdown-menu dropdown-menu-end shadow-sm">
+									<li>
+										<button
+											className="dropdown-item d-flex align-items-center"
+											type="button"
+											data-bs-toggle="modal"
+											data-bs-target={`#${modalId}`}
+										>
+											<i className="bi bi-pencil me-2"></i>
+											Edit Item
+										</button>
+									</li>
+									<li>
+										<button
+											className="dropdown-item d-flex align-items-center"
+											type="button"
+											data-bs-toggle="modal"
+											data-bs-target={`#${detailModalId}`}
+										>
+											<i className="bi bi-info-circle me-2"></i>
+											View Details
+										</button>
+									</li>
+									<li><hr className="dropdown-divider" /></li>
+									<li>
+										<button
+											type="button"
+											onClick={deleteAction}
+											className="dropdown-item text-danger d-flex align-items-center"
+										>
+											<i className="bi bi-trash me-2"></i>
+											Delete Item
+										</button>
+									</li>
+								</ul>
+							</div>
 						</div>
 					</div>
+
+					{/* Saving Indicator */}
+					{isSaving && (
+						<div className="position-absolute top-0 end-0 p-2">
+							<div className="spinner-border spinner-border-sm text-primary" role="status">
+								<span className="visually-hidden">Saving...</span>
+							</div>
+						</div>
+					)}
 				</div>
 			</div>
-		</>
+		</div>
 	);
 };
 
