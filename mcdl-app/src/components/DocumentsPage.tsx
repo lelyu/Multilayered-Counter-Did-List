@@ -42,7 +42,6 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ user }) => {
 	const [selectedList, setSelectedList] = useState<string>("");
 	const [currentLists, setCurrLists] = useState<List[]>([]);
 	const [currentList, setCurrentList] = useState<string>("");
-	const [isCreatingList, setIsCreatingList] = useState(false);
 
 	// List items related state
 	const [itemName, setItemName] = useState<string>("");
@@ -50,6 +49,11 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ user }) => {
 	const [currListItems, setCurrListItems] = useState<Item[]>([]);
 	const [selectedListItem, setSelectedListItem] = useState<string>("");
 	const [itemDescription, setItemDescription] = useState<string>("");
+
+	// Add new state for animations
+	const [isListFormVisible, setIsListFormVisible] = useState(false);
+	const [isItemFormVisible, setIsItemFormVisible] = useState(false);
+	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	// ------------------ List functions ------------------
 
@@ -291,23 +295,38 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ user }) => {
 		}
 	}, [user, folderId, selectedList]);
 
-	const handleCreateList = () => {
+	const handleCreateList = async () => {
 		if (user?.uid && folderId && currentList.trim()) {
-			createList(user.uid, folderId, currentList);
-			setIsCreatingList(false);
+			setIsSubmitting(true);
+			try {
+				await createList(user.uid, folderId, currentList);
+				setIsListFormVisible(false);
+				setCurrentList("");
+			} finally {
+				setIsSubmitting(false);
+			}
 		}
 	};
 
-	const handleCreateItem = () => {
+	const handleCreateItem = async () => {
 		if (user?.uid && folderId && selectedList && itemName.trim()) {
-			createItem(
-				user.uid,
-				folderId,
-				selectedList,
-				itemName,
-				count,
-				itemDescription || ""
-			);
+			setIsSubmitting(true);
+			try {
+				await createItem(
+					user.uid,
+					folderId,
+					selectedList,
+					itemName,
+					count,
+					itemDescription || ""
+				);
+				setIsItemFormVisible(false);
+				setItemName("");
+				setItemDescription("");
+				setCount(0);
+			} finally {
+				setIsSubmitting(false);
+			}
 		}
 	};
 
@@ -330,41 +349,58 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ user }) => {
 							<h5 className="m-0">Lists</h5>
 							<button
 								className="btn btn-sm btn-primary"
-								onClick={() => setIsCreatingList(true)}
+								onClick={() => setIsListFormVisible(true)}
 							>
 								<i className="bi bi-plus-lg"></i>
 							</button>
 						</div>
 
-						{/* New List Input */}
-						{isCreatingList && (
-							<div className="input-group mb-3">
-								<input
-									type="text"
-									className="form-control form-control-sm"
-									value={currentList}
-									onChange={(e) => setCurrentList(e.target.value)}
-									placeholder="List name"
-									onKeyDown={(e) => {
-										if (e.key === 'Enter') {
-											handleCreateList();
-										} else if (e.key === 'Escape') {
-											setIsCreatingList(false);
-											setCurrentList('');
-										}
-									}}
-								/>
-								<button
-									className="btn btn-sm btn-outline-secondary"
-									onClick={() => {
-										setIsCreatingList(false);
-										setCurrentList('');
-									}}
-								>
-									<i className="bi bi-x"></i>
-								</button>
+						{/* New List Form */}
+						<div className={`new-list-form ${isListFormVisible ? 'show' : ''}`}>
+							<div className="card card-body shadow-sm">
+								<div className="d-flex justify-content-between align-items-center mb-2">
+									<h6 className="m-0">New List</h6>
+									<button
+										className="btn btn-sm btn-link text-muted p-0"
+										onClick={() => {
+											setIsListFormVisible(false);
+											setCurrentList("");
+										}}
+									>
+										<i className="bi bi-x-lg"></i>
+									</button>
+								</div>
+								<div className="input-group">
+									<input
+										type="text"
+										className="form-control form-control-sm"
+										value={currentList}
+										onChange={(e) => setCurrentList(e.target.value)}
+										placeholder="List name"
+										onKeyDown={(e) => {
+											if (e.key === 'Enter') {
+												handleCreateList();
+											} else if (e.key === 'Escape') {
+												setIsListFormVisible(false);
+												setCurrentList("");
+											}
+										}}
+										disabled={isSubmitting}
+									/>
+									<button
+										className="btn btn-sm btn-primary"
+										onClick={handleCreateList}
+										disabled={isSubmitting || !currentList.trim()}
+									>
+										{isSubmitting ? (
+											<span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+										) : (
+											<i className="bi bi-check-lg"></i>
+										)}
+									</button>
+								</div>
 							</div>
-						)}
+						</div>
 
 						{/* Lists */}
 						<div className="list-group list-group-flush">
@@ -425,8 +461,7 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ user }) => {
 							{selectedList && (
 								<button
 									className="btn btn-sm btn-primary"
-									data-bs-toggle="collapse"
-									data-bs-target="#newItemForm"
+									onClick={() => setIsItemFormVisible(true)}
 								>
 									<i className="bi bi-plus-lg"></i>
 								</button>
@@ -434,15 +469,42 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ user }) => {
 						</div>
 
 						{/* New Item Form */}
-						<div className="collapse mb-3" id="newItemForm">
-							<div className="card card-body">
-								<input
-									type="text"
-									className="form-control form-control-sm mb-2"
-									placeholder="Item name"
-									value={itemName}
-									onChange={(e) => setItemName(e.target.value)}
-								/>
+						<div className={`new-item-form ${isItemFormVisible ? 'show' : ''}`}>
+							<div className="card card-body shadow-sm">
+								<div className="d-flex justify-content-between align-items-center mb-2">
+									<h6 className="m-0">New Item</h6>
+									<button
+										className="btn btn-sm btn-link text-muted p-0"
+										onClick={() => {
+											setIsItemFormVisible(false);
+											setItemName("");
+											setItemDescription("");
+											setCount(0);
+										}}
+									>
+										<i className="bi bi-x-lg"></i>
+									</button>
+								</div>
+								<div className="mb-2">
+									<input
+										type="text"
+										className="form-control form-control-sm"
+										placeholder="Item name"
+										value={itemName}
+										onChange={(e) => setItemName(e.target.value)}
+										onKeyDown={(e) => {
+											if (e.key === 'Enter') {
+												handleCreateItem();
+											} else if (e.key === 'Escape') {
+												setIsItemFormVisible(false);
+												setItemName("");
+												setItemDescription("");
+												setCount(0);
+											}
+										}}
+										disabled={isSubmitting}
+									/>
+								</div>
 								<div className="input-group input-group-sm mb-2">
 									<span className="input-group-text">Count</span>
 									<input
@@ -450,20 +512,35 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ user }) => {
 										className="form-control"
 										value={count}
 										onChange={(e) => setCount(Number(e.target.value))}
+										disabled={isSubmitting}
 									/>
 								</div>
-								<textarea
-									className="form-control form-control-sm mb-2"
-									placeholder="Description (optional)"
-									value={itemDescription}
-									onChange={(e) => setItemDescription(e.target.value)}
-									rows={2}
-								></textarea>
+								<div className="mb-2">
+									<textarea
+										className="form-control form-control-sm"
+										placeholder="Description (optional)"
+										value={itemDescription}
+										onChange={(e) => setItemDescription(e.target.value)}
+										rows={2}
+										disabled={isSubmitting}
+									></textarea>
+								</div>
 								<button
 									className="btn btn-sm btn-primary w-100"
 									onClick={handleCreateItem}
+									disabled={isSubmitting || !itemName.trim()}
 								>
-									Add Item
+									{isSubmitting ? (
+										<>
+											<span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+											Creating...
+										</>
+									) : (
+										<>
+											<i className="bi bi-plus-lg me-2"></i>
+											Add Item
+										</>
+									)}
 								</button>
 							</div>
 						</div>

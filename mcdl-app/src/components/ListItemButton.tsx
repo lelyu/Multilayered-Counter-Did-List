@@ -53,11 +53,12 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 		};
 	}, [listItemName, currCount]);
 
-	// Unique IDs for each modal & label
-	const modalId = `exampleModal-ls-item-${listItemId}`;
-	const editModalLabelId = `editModalLabel-${listItemId}`;
-	const detailModalId = `exampleDetailModalLs-item-${listItemId}`;
-	const detailModalLabelId = `detailModalLabel-${listItemId}`;
+	// Reset form state when item data changes
+	useEffect(() => {
+		setName(listItemName);
+		setDescription(itemDescription);
+		setCurrCount(count);
+	}, [listItemName, itemDescription, count]);
 
 	// Format large numbers with commas
 	const formatNumber = (num: number) => {
@@ -73,6 +74,7 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 		) {
 			return;
 		}
+		setIsSaving(true);
 		try {
 			const itemRef = doc(
 				db,
@@ -94,6 +96,8 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 			onModalClose();
 		} catch (error) {
 			console.error("Error updating item:", error);
+		} finally {
+			setIsSaving(false);
 		}
 	};
 
@@ -119,11 +123,14 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 			await updateDoc(itemRef, { count: newCount });
 		} catch (error) {
 			console.error("Error updating count:", error);
-			setCurrCount(currCount); // Revert on error
+			setCurrCount(count); // Revert on error
 		} finally {
 			setTimeout(() => setIsSaving(false), 300);
 		}
 	};
+
+	const modalId = `modal-item-${listItemId}`;
+	const detailModalId = `modal-item-detail-${listItemId}`;
 
 	return (
 		<div className="mb-2 w-100">
@@ -131,8 +138,10 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 			<div
 				className="modal fade"
 				id={modalId}
+				data-bs-backdrop="static"
+				data-bs-keyboard="false"
 				tabIndex={-1}
-				aria-labelledby={editModalLabelId}
+				aria-labelledby={`editModalLabel-${listItemId}`}
 				aria-hidden="true"
 			>
 				<div className="modal-dialog modal-dialog-centered">
@@ -140,7 +149,7 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 						<div className="modal-header">
 							<h1
 								className="modal-title fs-5 d-flex align-items-center"
-								id={editModalLabelId}
+								id={`editModalLabel-${listItemId}`}
 							>
 								<i className="bi bi-pencil-square me-2"></i>
 								Edit Item
@@ -156,7 +165,7 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 							<form>
 								<div className="mb-3">
 									<label
-										htmlFor="item-name"
+										htmlFor={`item-name-${listItemId}`}
 										className="form-label"
 									>
 										Item Name
@@ -164,15 +173,16 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 									<input
 										type="text"
 										className="form-control"
-										id="item-name"
+										id={`item-name-${listItemId}`}
 										value={name}
 										onChange={(e) => setName(e.target.value)}
 										placeholder="Enter item name"
+										disabled={isSaving}
 									/>
 								</div>
 								<div className="mb-3">
 									<label
-										htmlFor="item-count"
+										htmlFor={`item-count-${listItemId}`}
 										className="form-label"
 									>
 										Count
@@ -182,20 +192,23 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 											className="btn btn-outline-secondary"
 											type="button"
 											onClick={() => setCurrCount(prev => Math.max(0, prev - 1))}
+											disabled={isSaving}
 										>
 											<i className="bi bi-dash"></i>
 										</button>
 										<input
 											type="number"
 											className="form-control text-center"
-											id="item-count"
+											id={`item-count-${listItemId}`}
 											value={currCount}
 											onChange={(e) => setCurrCount(Math.max(0, parseInt(e.target.value) || 0))}
+											disabled={isSaving}
 										/>
 										<button
 											className="btn btn-outline-secondary"
 											type="button"
 											onClick={() => setCurrCount(prev => prev + 1)}
+											disabled={isSaving}
 										>
 											<i className="bi bi-plus"></i>
 										</button>
@@ -203,18 +216,19 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 								</div>
 								<div className="mb-3">
 									<label
-										htmlFor="item-description"
+										htmlFor={`item-description-${listItemId}`}
 										className="form-label"
 									>
 										Description
 									</label>
 									<textarea
 										className="form-control"
-										id="item-description"
+										id={`item-description-${listItemId}`}
 										value={description}
 										onChange={(e) => setDescription(e.target.value)}
 										placeholder="Add a description for your item"
 										rows={4}
+										disabled={isSaving}
 									></textarea>
 								</div>
 							</form>
@@ -224,6 +238,7 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 								type="button"
 								className="btn btn-outline-secondary"
 								data-bs-dismiss="modal"
+								disabled={isSaving}
 							>
 								Cancel
 							</button>
@@ -232,8 +247,16 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 								className="btn btn-primary"
 								onClick={editAction}
 								data-bs-dismiss="modal"
+								disabled={isSaving || name.trim() === ""}
 							>
-								Save Changes
+								{isSaving ? (
+									<>
+										<span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+										Saving...
+									</>
+								) : (
+									'Save Changes'
+								)}
 							</button>
 						</div>
 					</div>
@@ -244,8 +267,10 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 			<div
 				className="modal fade"
 				id={detailModalId}
+				data-bs-backdrop="static"
+				data-bs-keyboard="false"
 				tabIndex={-1}
-				aria-labelledby={detailModalLabelId}
+				aria-labelledby={`detailModalLabel-${listItemId}`}
 				aria-hidden="true"
 			>
 				<div className="modal-dialog modal-dialog-centered">
@@ -253,7 +278,7 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 						<div className="modal-header">
 							<h1
 								className="modal-title fs-5"
-								id={detailModalLabelId}
+								id={`detailModalLabel-${listItemId}`}
 							>
 								<i className="bi bi-info-circle me-2"></i>
 								Item Details
@@ -307,7 +332,7 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 							style={{ cursor: 'pointer' }}
 						>
 							<i className={`bi bi-box me-2 ${isSelected ? 'text-primary' : ''}`}></i>
-							<div className="min-w-0"> {/* prevents flex item from overflowing */}
+							<div className="min-w-0">
 								<div 
 									className={`text-truncate ${isSelected ? 'fw-semibold' : ''}`}
 									data-bs-toggle="tooltip"

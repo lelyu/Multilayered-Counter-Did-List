@@ -428,9 +428,12 @@ const Home: React.FC = () => {
 				{!user?.emailVerified && (
 					<h3>You need verify your account to use this app.</h3>
 				)}
+				{/* Main content row with 3 columns: Folders, Items, Lists */}
 				<div className="row align-items-start column-gap-3">
+					{/* Folders column */}
 					<div className="col shadow p-3 mb-5 bg-body-tertiary rounded">
 						<h3>My Folders</h3>
+						{/* New folder input group */}
 						<div className="input-group mb-3">
 							<button
 								disabled={user === null}
@@ -454,17 +457,20 @@ const Home: React.FC = () => {
 							/>
 						</div>
 
+						{/* Folders list */}
 						<div
 							className="btn-group-vertical container"
 							role="group"
 							aria-label="Vertical button group"
 						>
+							{/* Show message if no folders exist */}
 							{folders.length === 0 && (
 								<button className="btn btn-light" disabled>
 									You haven't created any folder yet.
 								</button>
 							)}
 
+							{/* Map through and display folder buttons */}
 							{folders.map((folder) => (
 								<FolderButton
 									key={folder.id}
@@ -486,9 +492,11 @@ const Home: React.FC = () => {
 						</div>
 					</div>
 
+					{/* Items column */}
 					<div className="col-6 shadow p-3 mb-5 bg-body-tertiary rounded">
 						<h3>My Items</h3>
 						<div>
+							{/* New item input group */}
 							<div className="input-group mb-3">
 								<button
 									className="input-group-text btn btn-light"
@@ -507,6 +515,7 @@ const Home: React.FC = () => {
 								>
 									New Item
 								</button>
+								{/* Item name input */}
 								<input
 									type="text"
 									className="form-control"
@@ -517,6 +526,7 @@ const Home: React.FC = () => {
 										setItemName(e.target.value)
 									}
 								/>
+								{/* Item count controls */}
 								<span
 									className="input-group-text"
 									id="inputGroup-sizing-default"
@@ -535,9 +545,9 @@ const Home: React.FC = () => {
 								/>
 							</div>
 
-							{/* add a description for the list item*/}
+							{/* Collapsible item description section */}
 							<div className="container mt-3 mb-3">
-								{/* Button to toggle the collapse */}
+								{/* Toggle button for description */}
 								<button
 									className="btn btn-secondary"
 									type="button"
@@ -549,7 +559,7 @@ const Home: React.FC = () => {
 									Add a description
 								</button>
 
-								{/* Collapsible container with the textarea */}
+								{/* Description textarea */}
 								<div
 									className="collapse mt-3 form-floating"
 									id="collapseTextarea"
@@ -570,11 +580,13 @@ const Home: React.FC = () => {
 								</div>
 							</div>
 
+							{/* Items list */}
 							<div
 								className="btn-group-vertical container"
 								role="group"
 								aria-label="Vertical button group"
 							>
+								{/* Show message if no items exist */}
 								{currListItems.length === 0 && (
 									<button
 										className="btn btn-light text-start"
@@ -584,6 +596,7 @@ const Home: React.FC = () => {
 									</button>
 								)}
 
+								{/* Map through and display item buttons */}
 								{currListItems.map((item) => (
 									<ListItemButton
 										key={item.id}
@@ -622,8 +635,10 @@ const Home: React.FC = () => {
 						</div>
 					</div>
 
+					{/* Lists column */}
 					<div className="col shadow p-3 mb-5 bg-body-tertiary rounded">
 						<h3>My Lists</h3>
+						{/* New list input group */}
 						<div className="input-group mb-3">
 							<button
 								className="input-group-text btn btn-light"
@@ -649,11 +664,13 @@ const Home: React.FC = () => {
 							/>
 						</div>
 
+						{/* Lists list */}
 						<div
 							className="btn-group-vertical container"
 							role="group"
 							aria-label="Vertical button group"
 						>
+							{/* Show message if no lists exist */}
 							{currentLists.length === 0 && (
 								<button
 									className="btn btn-light text-start"
@@ -663,6 +680,7 @@ const Home: React.FC = () => {
 								</button>
 							)}
 
+							{/* Map through and display list buttons */}
 							{currentLists.map((ls) => (
 								<ListButton
 									key={ls.id}
