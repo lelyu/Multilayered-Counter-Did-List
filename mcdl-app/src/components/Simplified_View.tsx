@@ -14,8 +14,6 @@ import FolderButton from "./FolderButton.tsx";
 import ListButton from "./ListButton";
 import ListItemButton from "./ListItemButton";
 import ChatUI from "./ChatUI.tsx";
-import FoldersPage from "./FoldersPage.tsx";
-import DocumentsPage from "./DocumentsPage.tsx";
 
 interface Folder {
 	id: string;
@@ -429,9 +427,287 @@ const Home: React.FC = () => {
 					<h3>You need verify your account to use this app.</h3>
 				)}
 				{/* Main content row with 3 columns: Folders, Items, Lists */}
-				
+				<div className="row align-items-start column-gap-3">
+					{/* Folders column */}
+					<div className="col shadow p-3 mb-5 bg-body-tertiary rounded">
+						<h3>My Folders</h3>
+						{/* New folder input group */}
+						<div className="input-group mb-3">
+							<button
+								disabled={user === null}
+								className="input-group-text btn btn-light"
+								id="inputGroup-sizing-default"
+								onClick={() =>
+									createFolder(user.uid, currentFolder)
+								}
+							>
+								New Folder
+							</button>
+							<input
+								value={currentFolder}
+								onChange={(e) =>
+									setCurrentFolder(e.target.value)
+								}
+								type="text"
+								className="form-control"
+								aria-label="Sizing example input"
+								aria-describedby="inputGroup-sizing-default"
+							/>
+						</div>
+
+						{/* Folders list */}
+						<div
+							className="btn-group-vertical container"
+							role="group"
+							aria-label="Vertical button group"
+						>
+							{/* Show message if no folders exist */}
+							{folders.length === 0 && (
+								<button className="btn btn-light" disabled>
+									You haven't created any folder yet.
+								</button>
+							)}
+
+							{/* Map through and display folder buttons */}
+							{folders.map((folder) => (
+								<FolderButton
+									key={folder.id}
+									deleteAction={() =>
+										deleteFolder(user.uid, folder.id)
+									}
+									selectAction={() =>
+										new_handleFolderSelection(folder.id)
+									}
+									userId={user.uid}
+									folderId={folder.id}
+									folderName={folder.name}
+									folderDescription={folder.description}
+									dateCreated={folder.dateCreated}
+									isSelected={folder.id === selectedFolder}
+									onModalClose={() => getFolders(user.uid)}
+								/>
+							))}
+						</div>
+					</div>
+
+					{/* Items column */}
+					<div className="col-6 shadow p-3 mb-5 bg-body-tertiary rounded">
+						<h3>My Items</h3>
+						<div>
+							{/* New item input group */}
+							<div className="input-group mb-3">
+								<button
+									className="input-group-text btn btn-light"
+									id="inputGroup-sizing-default"
+									disabled={user === null}
+									onClick={() =>
+										createItem(
+											user.uid,
+											selectedFolder,
+											selectedList,
+											itemName,
+											count,
+											itemDescription,
+										)
+									}
+								>
+									New Item
+								</button>
+								{/* Item name input */}
+								<input
+									type="text"
+									className="form-control"
+									aria-label="Sizing example input"
+									aria-describedby="inputGroup-sizing-default"
+									value={itemName}
+									onChange={(e) =>
+										setItemName(e.target.value)
+									}
+								/>
+								{/* Item count controls */}
+								<span
+									className="input-group-text"
+									id="inputGroup-sizing-default"
+								>
+									Count: {count}
+								</span>
+								<input
+									type="number"
+									className="form-control"
+									aria-label="Sizing example input"
+									aria-describedby="inputGroup-sizing-default"
+									value={count}
+									onChange={(e) =>
+										setCount(Number(e.target.value))
+									}
+								/>
+							</div>
+
+							{/* Collapsible item description section */}
+							<div className="container mt-3 mb-3">
+								{/* Toggle button for description */}
+								<button
+									className="btn btn-secondary"
+									type="button"
+									data-bs-toggle="collapse"
+									data-bs-target="#collapseTextarea"
+									aria-expanded="false"
+									aria-controls="collapseTextarea"
+								>
+									Add a description
+								</button>
+
+								{/* Description textarea */}
+								<div
+									className="collapse mt-3 form-floating"
+									id="collapseTextarea"
+								>
+									<textarea
+										className="form-control"
+										rows={5}
+										id="floatingTextarea"
+										placeholder="Add a description here"
+										value={itemDescription}
+										onChange={(e) =>
+											setItemDescription(e.target.value)
+										}
+									></textarea>
+									<label htmlFor="floatingTextarea">
+										Description
+									</label>
+								</div>
+							</div>
+
+							{/* Items list */}
+							<div
+								className="btn-group-vertical container"
+								role="group"
+								aria-label="Vertical button group"
+							>
+								{/* Show message if no items exist */}
+								{currListItems.length === 0 && (
+									<button
+										className="btn btn-light text-start"
+										disabled
+									>
+										You haven't created any items yet.
+									</button>
+								)}
+
+								{/* Map through and display item buttons */}
+								{currListItems.map((item) => (
+									<ListItemButton
+										key={item.id}
+										deleteAction={() =>
+											deleteListItem(
+												user.uid,
+												selectedFolder,
+												selectedList,
+												item.id,
+											)
+										}
+										selectAction={() =>
+											new_handleListItemSelection(item.id)
+										}
+										userId={user.uid}
+										folderId={selectedFolder}
+										listId={selectedList}
+										listItemId={item.id}
+										listItemName={item.name}
+										dateCreated={item.dateCreated}
+										isSelected={
+											item.id === selectedListItem
+										}
+										count={item.count}
+										itemDescription={item.description}
+										onModalClose={() =>
+											getListItems(
+												user.uid,
+												selectedFolder,
+												selectedList,
+											)
+										}
+									/>
+								))}
+							</div>
+						</div>
+					</div>
+
+					{/* Lists column */}
+					<div className="col shadow p-3 mb-5 bg-body-tertiary rounded">
+						<h3>My Lists</h3>
+						{/* New list input group */}
+						<div className="input-group mb-3">
+							<button
+								className="input-group-text btn btn-light"
+								id="inputGroup-sizing-default"
+								disabled={user === null}
+								onClick={() =>
+									createList(
+										user.uid,
+										selectedFolder,
+										currentList,
+									)
+								}
+							>
+								New List
+							</button>
+							<input
+								value={currentList}
+								onChange={(e) => setCurrentList(e.target.value)}
+								type="text"
+								className="form-control"
+								aria-label="Sizing example input"
+								aria-describedby="inputGroup-sizing-default"
+							/>
+						</div>
+
+						{/* Lists list */}
+						<div
+							className="btn-group-vertical container"
+							role="group"
+							aria-label="Vertical button group"
+						>
+							{/* Show message if no lists exist */}
+							{currentLists.length === 0 && (
+								<button
+									className="btn btn-light text-start"
+									disabled
+								>
+									You haven't created any lists yet.
+								</button>
+							)}
+
+							{/* Map through and display list buttons */}
+							{currentLists.map((ls) => (
+								<ListButton
+									key={ls.id}
+									deleteAction={() =>
+										deleteList(
+											user.uid,
+											selectedFolder,
+											ls.id,
+										)
+									}
+									selectAction={() =>
+										new_handleListSelection(ls.id)
+									}
+									userId={user.uid}
+									folderId={selectedFolder}
+									listId={ls.id}
+									listName={ls.name}
+									listDescription={ls.description}
+									dateCreated={ls.dateCreated}
+									isSelected={ls.id === selectedList}
+									onModalClose={() =>
+										getLists(user.uid, selectedFolder)
+									}
+								/>
+							))}
+						</div>
+					</div>
+				</div>
 			</div>
-			<FoldersPage folders={folders} userId={user?.uid} onFolderUpdate={() => getFolders(user?.uid)} />
 			<ChatUI />
 		</>
 	);

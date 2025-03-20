@@ -15,7 +15,7 @@ import DocumentsPage from "./components/DocumentsPage.tsx";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./config/firebase.ts";
 import { useState } from "react";
-
+import SimplifiedView from "./components/Simplified_View.tsx";
 const App: React.FC = () => {
 	const [user, setUser] = useState<null>();
 	useEffect(() => {
@@ -50,6 +50,7 @@ const App: React.FC = () => {
 						path="/documents/:folderId"
 						element={<DocumentsPage user={user} />}
 					/>
+					<Route path="/simplified_view" element={<SimplifiedView />} />
 				</Routes>
 
 				<Footer />
