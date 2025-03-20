@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { db } from "../config/firebase.ts";
 
@@ -39,23 +39,20 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 	// Unique IDs for each modal & label
 	const modalId = `exampleModal-ls-item-${listItemId}`;
 	const editModalLabelId = `editModalLabel-${listItemId}`;
-
 	const detailModalId = `exampleDetailModalLs-item-${listItemId}`;
 	const detailModalLabelId = `detailModalLabel-${listItemId}`;
 
+	// Update the item (name, description, count)
 	const editAction = async () => {
-		// if no changes occur return
 		if (
 			currCount === count &&
 			listItemName === name &&
 			(itemDescription === description || description === "")
 		) {
-			console.log("itemDescription", itemDescription);
-			console.log("no changes detected");
+			console.log("No changes detected.");
 			return;
 		}
 		try {
-			console.log("updating database");
 			const itemRef = doc(
 				db,
 				"users",
@@ -79,11 +76,11 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 		}
 	};
 
+	// Increment or decrement the count
 	const handleCountChanges = async (isAdding: boolean) => {
 		const newCount = isAdding ? currCount + 1 : currCount - 1;
 		setCurrCount(newCount);
 		setIsSaving(true);
-
 		const itemRef = doc(
 			db,
 			"users",
@@ -101,9 +98,18 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 		}, 300);
 	};
 
+	// OPTIONAL: If you're not using React Bootstrap or similar,
+	// you might need to initialize tooltips yourself:
+	// useEffect(() => {
+	//   const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+	//   tooltipTriggerList.map(function (tooltipTriggerEl) {
+	//     return new bootstrap.Tooltip(tooltipTriggerEl)
+	//   })
+	// }, [])
+
 	return (
 		<>
-			{/* Edit Item Modal */}
+			{/* ===== Edit Modal ===== */}
 			<div
 				className="modal fade"
 				id={modalId}
@@ -185,7 +191,7 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 				</div>
 			</div>
 
-			{/* View Details Modal */}
+			{/* ===== Details Modal ===== */}
 			<div
 				className="modal fade"
 				id={detailModalId}
@@ -245,94 +251,105 @@ const ListItemButton: React.FC<ListItemButtonProps> = ({
 				</div>
 			</div>
 
-			{/* If isSaving is true, show spinner */}
+			{/* ===== Saving Spinner ===== */}
 			{isSaving && (
-				<button className="btn btn-success" type="button" disabled>
+				<button className="btn btn-success mb-2" type="button" disabled>
 					<span
 						className="spinner-grow spinner-grow-sm"
 						aria-hidden="true"
 					/>
-					<span role="status">Saving...</span>
+					<span role="status"> Saving...</span>
 				</button>
 			)}
 
-			{/* Main Button Group */}
-			<div
-				className="btn-group"
-				role="group"
-				aria-label="Folder Button"
-				style={{ width: "100%", display: "flex" }}
-			>
-				<button
-					onClick={selectAction}
-					type="button"
-					className={`btn ${
-						isSelected ? "btn-primary" : "btn-light"
-					} text-start`}
-					style={{ width: "80%" }}
-				>
-					{listItemName}{" "}
-					<span className="fst-italic">Count: {currCount}</span>
-				</button>
+			{/* ===== Row Layout for Each List Item ===== */}
+			<div className="row row-cols-1">
+				<div className="col">
+					<div className="d-flex flex-wrap align-items-center justify-content-between p-2 border rounded">
+						{/* Item Name: truncated + tooltip */}
+						<div
+							className={`text-truncate ${isSelected ? "fw-bold" : ""}`}
+							style={{ maxWidth: "120px" }}
+							data-bs-toggle="tooltip"
+							title={listItemName}
+							onClick={selectAction}
+						>
+							{listItemName}
+						</div>
 
-				<button
-					disabled={isSaving}
-					className="btn btn-light"
-					onClick={() => handleCountChanges(false)}
-				>
-					<i className="bi bi-arrow-left"></i>
-				</button>
-				<button
-					disabled={isSaving}
-					className="btn btn-light"
-					onClick={() => handleCountChanges(true)}
-				>
-					<i className="bi bi-arrow-right"></i>
-				</button>
+						{/* Count Increment/Decrement */}
+						<div
+							className="input-group input-group-sm"
+							style={{ width: "120px" }}
+						>
+							<button
+								className="btn btn-outline-secondary"
+								onClick={() => handleCountChanges(false)}
+								disabled={isSaving}
+							>
+								<i className="bi bi-dash"></i>
+							</button>
+							<input
+								type="text"
+								className="form-control text-center"
+								value={currCount}
+								readOnly
+							/>
+							<button
+								className="btn btn-outline-secondary"
+								onClick={() => handleCountChanges(true)}
+								disabled={isSaving}
+							>
+								<i className="bi bi-plus"></i>
+							</button>
+						</div>
 
-				<button
-					disabled={isSaving}
-					onClick={selectAction}
-					type="button"
-					className="btn btn-light dropdown-toggle dropdown-toggle-split"
-					data-bs-toggle="dropdown"
-					aria-expanded="false"
-					style={{ width: "20%" }}
-				>
-					<span className="visually-hidden">See Actions</span>
-				</button>
-				<ul className="dropdown-menu">
-					<li>
-						<button
-							className="dropdown-item"
-							data-bs-toggle="modal"
-							data-bs-target={`#${modalId}`}
-							data-bs-whatever="@mdo"
-						>
-							Edit Item
-						</button>
-					</li>
-					<li>
-						<button
-							className="dropdown-item"
-							data-bs-toggle="modal"
-							data-bs-target={`#${detailModalId}`}
-						>
-							View Details
-						</button>
-					</li>
-					<li>
-						<hr className="dropdown-divider" />
-					</li>
-					<li>
-						<button
-							onClick={deleteAction}
-							className="btn btn-danger dropdown-item"
-						>
-							Delete This Item
-						</button>
-					</li>
-				</ul>
+						{/* Actions Dropdown */}
+						<div className="btn-group">
+							<button
+								disabled={isSaving}
+								type="button"
+								className="btn btn-light dropdown-toggle"
+								data-bs-toggle="dropdown"
+								aria-expanded="false"
+							>
+								Actions
+							</button>
+							<ul className="dropdown-menu">
+								<li>
+									<button
+										className="dropdown-item"
+										data-bs-toggle="modal"
+										data-bs-target={`#${modalId}`}
+										data-bs-whatever="@mdo"
+									>
+										Edit Item
+									</button>
+								</li>
+								<li>
+									<button
+										className="dropdown-item"
+										data-bs-toggle="modal"
+										data-bs-target={`#${detailModalId}`}
+									>
+										View Details
+									</button>
+								</li>
+								<li>
+									<hr className="dropdown-divider" />
+								</li>
+								<li>
+									<button
+										onClick={deleteAction}
+										className="btn btn-danger dropdown-item"
+									>
+										Delete This Item
+									</button>
+								</li>
+							</ul>
+						</div>
+					</div>
+				</div>
 			</div>
 		</>
 	);

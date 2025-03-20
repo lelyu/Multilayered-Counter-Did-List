@@ -290,16 +290,14 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ user }) => {
 
 	return (
 		<>
-			<h1>Folder {folderId}</h1>
+			<h4>Folder {folderId}</h4>
 			<div className="container-fluid">
 				<div className="row">
 					{/* --- Lists Column --- */}
 					<div className="col-2">
-						<div className="shadow p-3 mb-5 bg-body-tertiary rounded vh-100">
-							<h3>My Lists</h3>
-
+						<div className="p-3 mb-5 bg-body-tertiary rounded vh-100">
+							<h4>Collections</h4>
 							<hr />
-
 							<div
 								className="btn-group-vertical container"
 								role="group"
@@ -347,78 +345,77 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ user }) => {
 						</div>
 					</div>
 					{/* --- Editor Column --- */}
-					<div className="col-8">
+					<div className="col-8 bg-white">
 						<MyEditor />
 					</div>
 					{/* --- List Items Column --- */}
 					<div className="col-2">
-						<div className="shadow p-3 bg-body-tertiary rounded vh-100">
-							<h3>Current Items</h3>
-							<div>
-								{/* Render list items */}
-								<hr />
-								<div
-									className="btn-group-vertical container"
-									role="group"
-									aria-label="Vertical button group"
-								>
-									{currListItems.length === 0 ? (
-										<button
-											className="btn btn-light text-start"
-											disabled
-										>
-											You haven't created any items yet.
-										</button>
-									) : (
-										currListItems.map((item) => (
-											<ListItemButton
-												key={item.id}
-												deleteAction={() =>
-													user &&
-													folderId &&
-													selectedList &&
-													deleteListItem(
-														user.uid,
-														folderId,
-														selectedList,
-														item.id,
-													)
-												}
-												selectAction={() =>
-													new_handleListItemSelection(
-														item.id,
-													)
-												}
-												userId={user.uid}
-												folderId={folderId}
-												listId={selectedList}
-												listItemId={item.id}
-												listItemName={item.name}
-												dateCreated={item.dateCreated}
-												isSelected={
-													item.id === selectedListItem
-												}
-												count={item.count}
-												itemDescription={
-													item.description
-												}
-												onModalClose={() =>
-													user &&
-													folderId &&
-													selectedList &&
-													getListItems(
-														user.uid,
-														folderId,
-														selectedList,
-													)
-												}
-											/>
-										))
-									)}
-								</div>
+						<div
+							className="p-3 bg-body-tertiary rounded"
+							style={{ height: "100vh", overflowY: "auto" }}
+						>
+							<h4>Pages</h4>
+							<hr />
+							<div
+								className="btn-group-vertical w-100"
+								role="group"
+								aria-label="Vertical button group"
+							>
+								{currListItems.length === 0 ? (
+									<button
+										className="btn btn-light text-start"
+										disabled
+									>
+										You haven't created any items yet.
+									</button>
+								) : (
+									currListItems.map((item) => (
+										<ListItemButton
+											key={item.id}
+											deleteAction={() =>
+												user &&
+												folderId &&
+												selectedList &&
+												deleteListItem(
+													user.uid,
+													folderId,
+													selectedList,
+													item.id,
+												)
+											}
+											selectAction={() =>
+												new_handleListItemSelection(
+													item.id,
+												)
+											}
+											userId={user.uid}
+											folderId={folderId}
+											listId={selectedList}
+											listItemId={item.id}
+											listItemName={item.name}
+											dateCreated={item.dateCreated}
+											isSelected={
+												item.id === selectedListItem
+											}
+											count={item.count}
+											itemDescription={item.description}
+											onModalClose={() =>
+												user &&
+												folderId &&
+												selectedList &&
+												getListItems(
+													user.uid,
+													folderId,
+													selectedList,
+												)
+											}
+										/>
+									))
+								)}
 							</div>
 						</div>
 					</div>
+
 					{/* End of columns */}
 				</div>
 			</div>
