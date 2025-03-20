@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { collection, query, orderBy, limit, getDocs, doc, updateDoc, deleteDoc, serverTimestamp, addDoc } from "firebase/firestore";
 import { db } from "../config/firebase";
 import { createPortal } from 'react-dom';
+import { Modal } from 'bootstrap';
 
 interface List {
 	id: string;
@@ -34,6 +35,31 @@ const FoldersPage: React.FC<FoldersPageProps> = ({ folders, userId, onFolderUpda
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [newFolderName, setNewFolderName] = useState("");
 	const [isCreating, setIsCreating] = useState(false);
+	const [modalInstance, setModalInstance] = useState<Modal | null>(null);
+
+	// Initialize modal when editingFolder changes
+	useEffect(() => {
+		if (editingFolder) {
+			const modalElement = document.getElementById(`modal-folder-${editingFolder.id}`);
+			if (modalElement) {
+				const modal = new Modal(modalElement, {
+					backdrop: 'static',
+					keyboard: false
+				});
+				setModalInstance(modal);
+				modal.show();
+			}
+		}
+	}, [editingFolder]);
+
+	// Cleanup modal instance when component unmounts
+	useEffect(() => {
+		return () => {
+			if (modalInstance) {
+				modalInstance.dispose();
+			}
+		};
+	}, [modalInstance]);
 
 	// Fetch recent lists for each folder
 	useEffect(() => {
@@ -103,6 +129,9 @@ const FoldersPage: React.FC<FoldersPageProps> = ({ folders, userId, onFolderUpda
 				});
 			}
 			onFolderUpdate();
+			if (modalInstance) {
+				modalInstance.hide();
+			}
 		} catch (error) {
 			console.error("Error updating folder:", error);
 		} finally {
@@ -152,8 +181,6 @@ const FoldersPage: React.FC<FoldersPageProps> = ({ folders, userId, onFolderUpda
 			setIsCreating(false);
 		}
 	};
-
-	const modalId = editingFolder ? `modal-folder-${editingFolder.id}` : null;
 
 	return (
 		<>
@@ -241,8 +268,6 @@ const FoldersPage: React.FC<FoldersPageProps> = ({ folders, userId, onFolderUpda
 													<button
 														className="dropdown-item d-flex align-items-center"
 														onClick={() => setEditingFolder(folder)}
-														data-bs-toggle="modal"
-														data-bs-target={`#${modalId}`}
 													>
 														<i className="bi bi-pencil me-2"></i>
 														Edit Folder
@@ -328,9 +353,7 @@ const FoldersPage: React.FC<FoldersPageProps> = ({ folders, userId, onFolderUpda
 			{editingFolder && createPortal(
 				<div
 					className="modal fade"
-					id={modalId}
-					data-bs-backdrop="static"
-					data-bs-keyboard="false"
+					id={`modal-folder-${editingFolder.id}`}
 					tabIndex={-1}
 					aria-labelledby={`editModalLabel-${editingFolder.id}`}
 					aria-hidden="true"
@@ -403,7 +426,6 @@ const FoldersPage: React.FC<FoldersPageProps> = ({ folders, userId, onFolderUpda
 									type="button"
 									className="btn btn-primary"
 									onClick={handleEdit}
-									data-bs-dismiss="modal"
 									disabled={isSubmitting || editName.trim() === ""}
 								>
 									{isSubmitting ? (

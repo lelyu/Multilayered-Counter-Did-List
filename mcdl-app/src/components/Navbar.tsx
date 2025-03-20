@@ -53,7 +53,7 @@ const Navbar: React.FC = () => {
 			});
 	};
 
-	const isSimplifiedView = location.pathname === "/simplified";
+	const isSimplifiedView = location.pathname === "/simplified_view";
 	const isHomeView = location.pathname === "/home";
 
 	return (
@@ -83,7 +83,7 @@ const Navbar: React.FC = () => {
 							<li className="nav-item">
 								<a
 									href="/home"
-									className={`nav-link btn ${isHomeView ? 'btn-primary' : 'btn-light'}`}
+									className={`nav-link btn ${isHomeView ? 'btn-light text-danger' : 'btn-light'}`}
 								>
 									<i className="bi bi-file-earmark-text me-1"></i>
 									Document Editor
@@ -92,7 +92,7 @@ const Navbar: React.FC = () => {
 							<li className="nav-item">
 								<a
 									href="/simplified_view"
-									className={`nav-link btn ${isSimplifiedView ? 'btn-primary text-white' : 'btn-light'}`}
+									className={`nav-link btn ${isSimplifiedView ? 'btn-light text-danger' : 'btn-light'}`}
 								>
 									<i className="bi bi-list-check me-1"></i>
 									Simple View
