@@ -13,6 +13,7 @@ import {
 	doc,
 } from "firebase/firestore";
 import { User } from 'firebase/auth';
+import { createPortal } from 'react-dom';
 
 interface List {
 	id: string;
@@ -331,279 +332,287 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ user }) => {
 	};
 
 	return (
-		<div className="vh-100 d-flex flex-column">
-			{/* Header */}
-			<div className="border-bottom bg-white p-3 d-flex align-items-center">
-				<h4 className="m-0 d-flex align-items-center">
-					<i className="bi bi-folder2-open me-2 text-primary"></i>
-					{folderName}
-				</h4>
-			</div>
-
-			{/* Main Content */}
-			<div className="flex-grow-1 d-flex">
-				{/* Lists Sidebar */}
-				<div className="border-end bg-light" style={{ width: "250px", overflowY: "auto" }}>
-					<div className="p-3">
-						<div className="d-flex justify-content-between align-items-center mb-3">
-							<h5 className="m-0">Lists</h5>
-							<button
-								className="btn btn-sm btn-primary"
-								onClick={() => setIsListFormVisible(true)}
-							>
-								<i className="bi bi-plus-lg"></i>
-							</button>
-						</div>
-
-						{/* New List Form */}
-						<div className={`new-list-form ${isListFormVisible ? 'show' : ''}`}>
-							<div className="card card-body shadow-sm">
-								<div className="d-flex justify-content-between align-items-center mb-2">
-									<h6 className="m-0">New List</h6>
-									<button
-										className="btn btn-sm btn-link text-muted p-0"
-										onClick={() => {
-											setIsListFormVisible(false);
-											setCurrentList("");
-										}}
-									>
-										<i className="bi bi-x-lg"></i>
-									</button>
-								</div>
-								<div className="input-group">
-									<input
-										type="text"
-										className="form-control form-control-sm"
-										value={currentList}
-										onChange={(e) => setCurrentList(e.target.value)}
-										placeholder="List name"
-										onKeyDown={(e) => {
-											if (e.key === 'Enter') {
-												handleCreateList();
-											} else if (e.key === 'Escape') {
-												setIsListFormVisible(false);
-												setCurrentList("");
-											}
-										}}
-										disabled={isSubmitting}
-									/>
-									<button
-										className="btn btn-sm btn-primary"
-										onClick={handleCreateList}
-										disabled={isSubmitting || !currentList.trim()}
-									>
-										{isSubmitting ? (
-											<span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-										) : (
-											<i className="bi bi-check-lg"></i>
-										)}
-									</button>
-								</div>
-							</div>
-						</div>
-
-						{/* Lists */}
-						<div className="list-group list-group-flush">
-							{currentLists.length === 0 ? (
-								<div className="text-muted small p-3 text-center">
-									No lists yet. Create one to get started!
-								</div>
-							) : (
-								currentLists.map((ls) => (
-									<ListButton
-										key={ls.id}
-										deleteAction={() =>
-											user?.uid &&
-											folderId &&
-											deleteList(
-												user.uid,
-												folderId,
-												ls.id,
-											)
-										}
-										selectAction={() =>
-											handleListSelection(ls.id)
-										}
-										userId={user?.uid || ""}
-										folderId={folderId || ""}
-										listId={ls.id}
-										listName={ls.name}
-										listDescription={ls.description}
-										dateCreated={ls.dateCreated}
-										isSelected={ls.id === selectedList}
-										onModalClose={() =>
-											user?.uid &&
-											folderId &&
-											getLists(user.uid, folderId)
-										}
-									/>
-								))
-							)}
-						</div>
-					</div>
+		<>
+			<div className="vh-100 d-flex flex-column">
+				{/* Header */}
+				<div className="border-bottom bg-white p-3 d-flex align-items-center">
+					<h4 className="m-0 d-flex align-items-center">
+						<i className="bi bi-folder2-open me-2 text-primary"></i>
+						{folderName}
+					</h4>
 				</div>
 
-				{/* Editor */}
-				<div className="flex-grow-1 bg-white">
-					<MyEditor 
-						userId={user?.uid}
-						folderId={folderId}
-						listId={selectedList}
-						listItemId={selectedListItem}
-					/>
-				</div>
-
-				{/* List Items Sidebar */}
-				<div className="border-start bg-light" style={{ width: "300px", overflowY: "auto" }}>
-					<div className="p-3">
-						<div className="d-flex justify-content-between align-items-center mb-3">
-							<h5 className="m-0">Items</h5>
-							{selectedList && (
+				{/* Main Content */}
+				<div className="flex-grow-1 d-flex">
+					{/* Lists Sidebar */}
+					<div className="border-end bg-light" style={{ width: "250px" }}>
+						<div className="p-3" style={{ height: "100%", overflowY: "auto" }}>
+							<div className="d-flex justify-content-between align-items-center mb-3">
+								<h5 className="m-0">Lists</h5>
 								<button
 									className="btn btn-sm btn-primary"
-									onClick={() => setIsItemFormVisible(true)}
+									onClick={() => setIsListFormVisible(true)}
 								>
 									<i className="bi bi-plus-lg"></i>
 								</button>
-							)}
-						</div>
+							</div>
 
-						{/* New Item Form */}
-						<div className={`new-item-form ${isItemFormVisible ? 'show' : ''}`}>
-							<div className="card card-body shadow-sm">
-								<div className="d-flex justify-content-between align-items-center mb-2">
-									<h6 className="m-0">New Item</h6>
-									<button
-										className="btn btn-sm btn-link text-muted p-0"
-										onClick={() => {
-											setIsItemFormVisible(false);
-											setItemName("");
-											setItemDescription("");
-											setCount(0);
-										}}
-									>
-										<i className="bi bi-x-lg"></i>
-									</button>
+							{/* New List Form */}
+							<div className={`new-list-form ${isListFormVisible ? 'show' : ''}`}>
+								<div className="card card-body shadow-sm">
+									<div className="d-flex justify-content-between align-items-center mb-2">
+										<h6 className="m-0">New List</h6>
+										<button
+											className="btn btn-sm btn-link text-muted p-0"
+											onClick={() => {
+												setIsListFormVisible(false);
+												setCurrentList("");
+											}}
+										>
+											<i className="bi bi-x-lg"></i>
+										</button>
+									</div>
+									<div className="input-group">
+										<input
+											type="text"
+											className="form-control form-control-sm"
+											value={currentList}
+											onChange={(e) => setCurrentList(e.target.value)}
+											placeholder="List name"
+											onKeyDown={(e) => {
+												if (e.key === 'Enter') {
+													handleCreateList();
+												} else if (e.key === 'Escape') {
+													setIsListFormVisible(false);
+													setCurrentList("");
+												}
+											}}
+											disabled={isSubmitting}
+										/>
+										<button
+											className="btn btn-sm btn-primary"
+											onClick={handleCreateList}
+											disabled={isSubmitting || !currentList.trim()}
+										>
+											{isSubmitting ? (
+												<span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+											) : (
+												<i className="bi bi-check-lg"></i>
+											)}
+										</button>
+									</div>
 								</div>
-								<div className="mb-2">
-									<input
-										type="text"
-										className="form-control form-control-sm"
-										placeholder="Item name"
-										value={itemName}
-										onChange={(e) => setItemName(e.target.value)}
-										onKeyDown={(e) => {
-											if (e.key === 'Enter') {
-												handleCreateItem();
-											} else if (e.key === 'Escape') {
+							</div>
+
+							{/* Lists */}
+							<div className="list-group list-group-flush">
+								{currentLists.length === 0 ? (
+									<div className="text-muted small p-3 text-center">
+										No lists yet. Create one to get started!
+									</div>
+								) : (
+									currentLists.map((ls) => (
+										<ListButton
+											key={ls.id}
+											deleteAction={() =>
+												user?.uid &&
+												folderId &&
+												deleteList(
+													user.uid,
+													folderId,
+													ls.id,
+												)
+											}
+											selectAction={() =>
+												handleListSelection(ls.id)
+											}
+											userId={user?.uid || ""}
+											folderId={folderId || ""}
+											listId={ls.id}
+											listName={ls.name}
+											listDescription={ls.description}
+											dateCreated={ls.dateCreated}
+											isSelected={ls.id === selectedList}
+											onModalClose={() =>
+												user?.uid &&
+												folderId &&
+												getLists(user.uid, folderId)
+											}
+										/>
+									))
+								)}
+							</div>
+						</div>
+					</div>
+
+					{/* Editor */}
+					<div className="flex-grow-1 bg-white">
+						<MyEditor 
+							userId={user?.uid}
+							folderId={folderId}
+							listId={selectedList}
+							listItemId={selectedListItem}
+						/>
+					</div>
+
+					{/* List Items Sidebar */}
+					<div className="border-start bg-light" style={{ width: "300px" }}>
+						<div className="p-3" style={{ height: "100%", overflowY: "auto" }}>
+							<div className="d-flex justify-content-between align-items-center mb-3">
+								<h5 className="m-0">Items</h5>
+								{selectedList && (
+									<button
+										className="btn btn-sm btn-primary"
+										onClick={() => setIsItemFormVisible(true)}
+									>
+										<i className="bi bi-plus-lg"></i>
+									</button>
+								)}
+							</div>
+
+							{/* New Item Form */}
+							<div className={`new-item-form ${isItemFormVisible ? 'show' : ''}`}>
+								<div className="card card-body shadow-sm">
+									<div className="d-flex justify-content-between align-items-center mb-2">
+										<h6 className="m-0">New Item</h6>
+										<button
+											className="btn btn-sm btn-link text-muted p-0"
+											onClick={() => {
 												setIsItemFormVisible(false);
 												setItemName("");
 												setItemDescription("");
 												setCount(0);
-											}
-										}}
-										disabled={isSubmitting}
-									/>
+											}}
+										>
+											<i className="bi bi-x-lg"></i>
+										</button>
+									</div>
+									<div className="mb-2">
+										<input
+											type="text"
+											className="form-control form-control-sm"
+											placeholder="Item name"
+											value={itemName}
+											onChange={(e) => setItemName(e.target.value)}
+											onKeyDown={(e) => {
+												if (e.key === 'Enter') {
+													handleCreateItem();
+												} else if (e.key === 'Escape') {
+													setIsItemFormVisible(false);
+													setItemName("");
+													setItemDescription("");
+													setCount(0);
+												}
+											}}
+											disabled={isSubmitting}
+										/>
+									</div>
+									<div className="input-group input-group-sm mb-2">
+										<span className="input-group-text">Count</span>
+										<input
+											type="number"
+											className="form-control"
+											value={count}
+											onChange={(e) => setCount(Number(e.target.value))}
+											disabled={isSubmitting}
+										/>
+									</div>
+									<div className="mb-2">
+										<textarea
+											className="form-control form-control-sm"
+											placeholder="Description (optional)"
+											value={itemDescription}
+											onChange={(e) => setItemDescription(e.target.value)}
+											rows={2}
+											disabled={isSubmitting}
+										></textarea>
+									</div>
+									<button
+										className="btn btn-sm btn-primary w-100"
+										onClick={handleCreateItem}
+										disabled={isSubmitting || !itemName.trim()}
+									>
+										{isSubmitting ? (
+											<>
+												<span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+												Creating...
+											</>
+										) : (
+											<>
+												<i className="bi bi-plus-lg me-2"></i>
+												Add Item
+											</>
+										)}
+									</button>
 								</div>
-								<div className="input-group input-group-sm mb-2">
-									<span className="input-group-text">Count</span>
-									<input
-										type="number"
-										className="form-control"
-										value={count}
-										onChange={(e) => setCount(Number(e.target.value))}
-										disabled={isSubmitting}
-									/>
-								</div>
-								<div className="mb-2">
-									<textarea
-										className="form-control form-control-sm"
-										placeholder="Description (optional)"
-										value={itemDescription}
-										onChange={(e) => setItemDescription(e.target.value)}
-										rows={2}
-										disabled={isSubmitting}
-									></textarea>
-								</div>
-								<button
-									className="btn btn-sm btn-primary w-100"
-									onClick={handleCreateItem}
-									disabled={isSubmitting || !itemName.trim()}
-								>
-									{isSubmitting ? (
-										<>
-											<span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-											Creating...
-										</>
-									) : (
-										<>
-											<i className="bi bi-plus-lg me-2"></i>
-											Add Item
-										</>
-									)}
-								</button>
 							</div>
-						</div>
 
-						{/* List Items */}
-						<div>
-							{!selectedList ? (
-								<div className="text-muted small text-center">
-									Select a list to view items
-								</div>
-							) : currListItems.length === 0 ? (
-								<div className="text-muted small text-center">
-									No items in this list yet
-								</div>
-							) : (
-								currListItems.map((item) => (
-									<ListItemButton
-										key={item.id}
-										deleteAction={() =>
-											user?.uid &&
-											folderId &&
-											selectedList &&
-											deleteListItem(
-												user.uid,
-												folderId,
-												selectedList,
-												item.id,
-											)
-										}
-										selectAction={() =>
-											new_handleListItemSelection(
-												item.id,
-											)
-										}
-										userId={user?.uid || ""}
-										folderId={folderId || ""}
-										listId={selectedList}
-										listItemId={item.id}
-										listItemName={item.name}
-										dateCreated={item.dateCreated}
-										isSelected={
-											item.id === selectedListItem
-										}
-										count={item.count}
-										itemDescription={item.description || ""}
-										onModalClose={() =>
-											user?.uid &&
-											folderId &&
-											selectedList &&
-											getListItems(
-												user.uid,
-												folderId,
-												selectedList,
-											)
-										}
-									/>
-								))
-							)}
+							{/* List Items */}
+							<div>
+								{!selectedList ? (
+									<div className="text-muted small text-center">
+										Select a list to view items
+									</div>
+								) : currListItems.length === 0 ? (
+									<div className="text-muted small text-center">
+										No items in this list yet
+									</div>
+								) : (
+									currListItems.map((item) => (
+										<ListItemButton
+											key={item.id}
+											deleteAction={() =>
+												user?.uid &&
+												folderId &&
+												selectedList &&
+												deleteListItem(
+													user.uid,
+													folderId,
+													selectedList,
+													item.id,
+												)
+											}
+											selectAction={() =>
+												new_handleListItemSelection(
+													item.id,
+												)
+											}
+											userId={user?.uid || ""}
+											folderId={folderId || ""}
+											listId={selectedList}
+											listItemId={item.id}
+											listItemName={item.name}
+											dateCreated={item.dateCreated}
+											isSelected={
+												item.id === selectedListItem
+											}
+											count={item.count}
+											itemDescription={item.description || ""}
+											onModalClose={() =>
+												user?.uid &&
+												folderId &&
+												selectedList &&
+												getListItems(
+													user.uid,
+													folderId,
+													selectedList,
+												)
+											}
+										/>
+									))
+								)}
+							</div>
 						</div>
 					</div>
 				</div>
 			</div>
-		</div>
+
+			{/* Modal Portal Container */}
+			{createPortal(
+				<div id="modal-root" />,
+				document.body
+			)}
+		</>
 	);
 };
 
