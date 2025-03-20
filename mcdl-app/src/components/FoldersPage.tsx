@@ -1,11 +1,22 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
-const FoldersPage = ({ folders }) => {
+interface Folder {
+	id: string;
+	name: string;
+	description?: string;
+	items?: string[];
+}
+
+interface FoldersPageProps {
+	folders: Folder[];
+}
+
+const FoldersPage: React.FC<FoldersPageProps> = ({ folders }) => {
 	return (
 		<div className="container-fluid py-3">
 			<div className="row g-3">
-				{folders.map((folder) => (
+				{folders.map((folder: Folder) => (
 					<div
 						className="col-12 col-sm-6 col-md-4 col-lg-3"
 						key={folder.id}
@@ -25,7 +36,7 @@ const FoldersPage = ({ folders }) => {
 							</div>
 							<ul className="list-group list-group-flush">
 								{folder.items && folder.items.length > 0 ? (
-									folder.items.map((item, idx) => (
+									folder.items.map((item: string, idx: number) => (
 										<li
 											className="list-group-item"
 											key={idx}
@@ -48,18 +59,20 @@ const FoldersPage = ({ folders }) => {
 								)}
 							</ul>
 							<div className="card-body">
-								{/* Link to the DocumentsPage with the folder's ID */}
+								{/* Pass folder name in state */}
 								<Link
 									to={`/documents/${folder.id}`}
-									className="card-link"
+									state={{ folderName: folder.name }}
+									className="btn btn-primary w-100 mb-2"
 								>
+									<i className="bi bi-folder2-open me-2"></i>
 									Open Folder
 								</Link>
-								{/* Optionally add an edit link */}
 								<Link
 									to={`/edit-folder/${folder.id}`}
-									className="card-link"
+									className="btn btn-outline-secondary w-100"
 								>
+									<i className="bi bi-pencil me-2"></i>
 									Edit
 								</Link>
 							</div>
